@@ -135,7 +135,12 @@ int opm_gc_run(int small, int mapdir_flag)
     printf("s && k should be 0\n");
     exit(0);
   }
- 
+//test print zj
+  if(mapdir_flag==1){
+  	printf("opm gc run--> gc data blk\n");
+  }else{
+	printf("opm gc run-->gc map blk\n");
+  }
   small = -1;
 
   for( q = 0; q < PAGE_NUM_PER_BLK; q++){
