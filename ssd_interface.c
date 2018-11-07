@@ -203,6 +203,8 @@ void printWearout()
 void endFlash()
 {
   nand_stat_print(outputfile);
+  //zj-添加输出各个块的擦除次数
+  nand_ecn_print(outputfile);
   ftl_op->end;
   nand_end();
 }  
