@@ -97,7 +97,7 @@ void nand_stat_print(FILE *outFP)
 void nand_ecn_print(FILE * outFP)
 {
 	int i;
-	fprintf(outFP,"\n")
+	fprintf(outFP,"\n");
 	fprintf(outFP,"NAND ECN STATISTICS\n");
 	fprintf(outFP, "------------------------------------------------------------\n");
 	for(i=0;i<nand_blk_num;i++) {
