@@ -90,6 +90,23 @@ void nand_stat_print(FILE *outFP)
   fprintf(outFP, "------------------------------------------------------------\n");
 }
 
+/*
+*add zhoujie 11-7
+*print nand_stat_ec to analysis
+*/
+void nand_ecn_print(FILE * outFP)
+{
+	int i;
+	fprintf(outFP,"\n")
+	fprintf(outFP,"NAND ECN STATISTICS\n");
+	fprintf(outFP, "------------------------------------------------------------\n");
+	for(i=0;i<nand_blk_num;i++) {
+		fprintf(outFP,"NANDBLK %d ECN:\t %u\n",i,nand_blk[i].state.ec);
+	}
+	fprintf(outFP, "------------------------------------------------------------\n");
+	
+}
+
 /**************** NAND INIT **********************/
 int nand_init (_u32 blk_num, _u8 min_free_blk_num)
 {

@@ -104,6 +104,7 @@ _u32 nand_get_free_blk(int);
 void nand_stat(int);
 void nand_stat_reset();
 void nand_stat_print(FILE *outFP);
+void nand_ecn_print(FILE *outFP);
 int nand_oob_read(_u32 psn);
 
 _u32 free_blk_num;
