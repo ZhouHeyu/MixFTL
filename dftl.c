@@ -127,6 +127,13 @@ int opm_gc_run(int small, int mapdir_flag)
   _u16 valid_sect_num,  l, s;
 
   victim_blk_no = opm_gc_cost_benefit();
+
+// test debug print zhoujie
+/*  if(mapdir_flag==2){
+	fprintf("map block gcc select blk no: %d\n",victim_blk_no);
+  }
+*/
+
   memset(copy_lsn, 0xFF, sizeof (copy_lsn));
 
   s = k = OFF_F_SECT(free_page_no[small]);
@@ -147,6 +154,9 @@ int opm_gc_run(int small, int mapdir_flag)
 
   for( q = 0; q < PAGE_NUM_PER_BLK; q++){
     if(nand_blk[victim_blk_no].page_status[q] == 1){ //map block
+    // test debug print zhoujie
+	fprintf("map block gcc select blk no: %d\n",victim_blk_no);
+	
       for( q = 0; q  < 64; q++) {
         if(nand_blk[victim_blk_no].page_status[q] == 0 ){
           printf("something corrupted1=%d",victim_blk_no);
