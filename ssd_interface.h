@@ -88,3 +88,8 @@ int last_unique_log_blk;
 int total_extr_blk_num;
 int total_init_blk_num;
 
+//判读对应的块有多少页的映射项在CMT中
+int * nand_blk_bit_map;
+
+
+

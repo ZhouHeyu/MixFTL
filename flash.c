@@ -122,8 +122,14 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
     return -1;
   }
   memset(nand_blk, 0xFF, sizeof (struct nand_blk_info) * blk_num);
-
-  
+// add zhoujie
+  nand_blk_bit_map=(int *)malloc(sizeof(int)*blk_num);
+  if (nand_blk == NULL)
+  {
+  	return -1;
+  }
+  memset(nand_blk_bit_map,0,sizeof(int)*blk_num);
+  	
   nand_blk_num = blk_num;
 
   pb_size = 1;
@@ -161,6 +167,9 @@ void nand_end ()
   nand_blk_num = 0;
   if (nand_blk != NULL) {
     nand_blk = NULL;
+  }
+  if (nand_blk_bit_map != NULL){
+	nand_blk_bit_map=NULL;
   }
 }
 
