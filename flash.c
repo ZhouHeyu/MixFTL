@@ -12,11 +12,17 @@
  */
 
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
 #include "flash.h"
 #include "ssd_interface.h"
 
 _u32 nand_blk_num, min_fb_num;
+
+//zhoujie
+static _u32 last_blk_pc;
+static int Min_N_Prime;
+double my_gloabl_nand_blk_wear_ave;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
 
@@ -91,6 +97,34 @@ void nand_stat_print(FILE *outFP)
 }
 
 /*
+* add zhoujie 11-8
+* 素数判断公式
+*/
+bool isPrime(int n){
+	if(n <= 1) return false;
+	int aqr = (int)sqrt(1.0*n);
+	for(int i = 2; i <= sqr; i++)
+	{
+		if（n % i == 0) return false;
+	}
+	return true;
+}
+/*
+* add zhoujie 11-9
+* 找到大于N的最小素数
+*/
+int FindMinPrime(int n){
+	int res=n;
+	while(1){
+		if(isPrime(res))
+			break;
+		res++;
+	}
+	return res;
+}
+
+
+/*
 *add zhoujie 11-7
 *print nand_stat_ec to analysis
 */
@@ -106,6 +140,69 @@ void nand_ecn_print(FILE * outFP)
 	fprintf(outFP, "------------------------------------------------------------\n");
 	
 }
+
+/*
+*add zhoujie 11-8
+* 统计全局块的平均块擦除次数
+*
+*/
+void nand_blk_ecn_ave_static()
+{
+	int i;
+	_u32 all_ecn=0;
+	for(i=0;i<nand_blk_num;i++) {
+		all_ecn+=nand_blk[i].state.ec;
+		//最大值越界报错处理(超出u32的最大地址区间4,294,967,296)
+		if(all_ecn >= 4294967296){
+			printf("all ecn sum is over limit 4294967296\n");
+			assert(0);
+		}
+	}
+	my_gloabl_nand_blk_wear_ave=all_ecn*1.0/nand_blk_num;
+}
+
+/*
+* add zhoujie 11-8
+* 选择一个冷块进行数据交换（方法1）
+* 生成一个初始的随机数，利用代数取余方式进行遍历
+*/
+/*
+_u32 find_switch_cold_blk_method1()
+{
+	
+}
+*/
+
+/*
+*add zhoujie 11-8
+* 选择一个冷块进行数据交换(方法2)
+* 按一个历史值记录值进行标记，大循环遍历
+*/
+_u32 find_switch_cold_blk_method2()
+{
+	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
+	for(i = 0 ;i < nand_blk_num; i++){
+		if(nand_blk_bit_map[i] < min_bitmap_value)
+			min_bitmap_value = nand_blk_bit_map[i];
+		//一般情况下，min_bitmap_value=0
+	}
+	if(min_bitmap_value > 0){
+		printf("nand_blk_bit_map value all larger than 0!\n");
+	}
+// 循环遍历之前的块ECN小于 平均值的冷块（映射项不在CMT中)
+	while(1){
+		if( last_blk_pc >= nand_blk_num )
+			last_blk_pc = 0;
+		if( nand_blk[last_blk_pc].state.ec < my_gloabl_nand_blk_wear_ave
+			&& nand_blk_bit_map[last_blk_pc] == min_bitmap_value ) {
+			break;
+		}
+		
+		last_blk_pc++;
+	}
+	return last_blk_pc;
+}
+
 
 /**************** NAND INIT **********************/
 int nand_init (_u32 blk_num, _u8 min_free_blk_num)
@@ -129,7 +226,15 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   	return -1;
   }
   memset(nand_blk_bit_map,0,sizeof(int)*blk_num);
-  	
+
+// 初始化磨损的差异阈值
+  my_wear_level_threshold=10;
+  Min_N_Prime=FindMinPrime(blk_num);
+//test print
+  printf("blk_num is %d\tMinPrime is %d\n",blk_num,Min_N_Prime);
+  
+  last_blk_pc=0;
+  
   nand_blk_num = blk_num;
 
   pb_size = 1;
@@ -461,3 +566,20 @@ _u32 nand_get_free_blk (int isGC)
 
   return -1;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
