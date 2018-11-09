@@ -100,14 +100,14 @@ void nand_stat_print(FILE *outFP)
 * add zhoujie 11-8
 * ËØÊıÅĞ¶Ï¹«Ê½
 */
-bool isPrime(int n){
-	if(n <= 1) return false;
+int isPrime(int n){
+	if(n <= 1) return 0;
 	int aqr = (int)sqrt(1.0*n);
 	for(int i = 2; i <= sqr; i++)
 	{
-		if£¨n % i == 0) return false;
+		if£¨n % i == 0) return 0;
 	}
-	return true;
+	return 1;
 }
 /*
 * add zhoujie 11-9
