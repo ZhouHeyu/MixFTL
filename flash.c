@@ -21,7 +21,7 @@ _u32 nand_blk_num, min_fb_num;
 
 //zhoujie
 static _u32 last_blk_pc;
-static int Min_N_Prime;
+static int Min_N_Prime,Liner_S,Liner_L;
 double my_gloabl_nand_blk_wear_ave;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
@@ -124,7 +124,6 @@ int FindMinPrime(int n){
 	return res;
 }
 
-
 /*
 *add zhoujie 11-7
 *print nand_stat_ec to analysis
@@ -167,12 +166,28 @@ void nand_blk_ecn_ave_static()
 * 选择一个冷块进行数据交换（方法1）
 * 生成一个初始的随机数，利用代数取余方式进行遍历
 */
-/*
+
 _u32 find_switch_cold_blk_method1()
 {
-	
+	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
+	for(i = 0 ;i < nand_blk_num; i++){
+		if(nand_blk_bit_map[i] < min_bitmap_value)
+			min_bitmap_value = nand_blk_bit_map[i];
+		//一般情况下，min_bitmap_value=0
+	}
+	if(min_bitmap_value > 0){
+		printf("nand_blk_bit_map value all larger than 0!\n");
+	}
+	while(1){
+		if(nand_blk[Liner_L].state.ec < my_gloabl_nand_blk_wear_ave
+			&& nand_blk_bit_map[Liner_L] == min_bitmap_value ){
+				break;
+		}
+		Liner_L=(Liner_S+Liner_L) % Min_N_Prime;
+	}
+	return (_u32)Liner_L;
 }
-*/
+
 
 /*
 *add zhoujie 11-8
@@ -231,6 +246,9 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
 // 初始化磨损的差异阈值
   my_wear_level_threshold=10;
   Min_N_Prime=FindMinPrime(blk_num);
+  Liner_S=(int)blk_num*0.5;
+  Liner_L=Liner_S;
+  
 //test print
   printf("blk_num is %d\tMinPrime is %d\n",blk_num,Min_N_Prime);
   
