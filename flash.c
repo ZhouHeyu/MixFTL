@@ -104,7 +104,7 @@ int isPrime(int n){
 	int aqr=0,i;
 	if(n <= 1) return 0;
 	aqr = (int)sqrt(1.0*n);
-	for(i = 2; i <= sqr; i++)
+	for(i = 2; i <= aqr; i++)
 	{
 		if£¨n % i == 0) return 0;
 	}
