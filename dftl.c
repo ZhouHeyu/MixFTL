@@ -26,6 +26,13 @@ blk_t extra_blk_num;
 _u32 free_blk_no[2];
 _u16 free_page_no[2];
 
+// add zhoujie 11-9
+static _u32 wear_src_blk_no,wear_target_blk_no;
+static _u16 wear_src_page_no,wear_target_page_no;
+int stat_wear_gc_called_num;
+double total_wear_gc_overhead_time;
+
+
 extern int merge_switch_num;
 extern int merge_partial_num;
 extern int merge_full_num;
@@ -60,6 +67,169 @@ _u32 opm_gc_cost_benefit()
   ASSERT(nand_blk[max_blk].ipc > 0);
   return max_blk;
 }
+
+/*
+* add zhoujie 11-9
+* 触发磨损均衡
+*
+*/
+void opm_wear_level(int target_blk_no)
+{
+
+	int merge_count;
+	int i,z, j,m,map_flag;
+	int k,old_flag,temp_arr[PAGE_NUM_PER_BLK],temp_arr1[PAGE_NUM_PER_BLK],map_arr[PAGE_NUM_PER_BLK]; 
+	int valid_flag,pos;
+	_u32 copy_lsn[SECT_NUM_PER_PAGE], copy[SECT_NUM_PER_PAGE];
+	_u16 valid_sect_num,  l, s;
+	
+	//确定选择交换的冷块数据
+	wear_src_blk_no=find_switch_cold_blk_method1();
+	wear_target_blk_no=target_blk_no;
+	
+	wear_src_page_no=0;
+	wear_target_page_no=0;
+
+	memset(copy_lsn, 0xFF, sizeof (copy_lsn));
+	
+	// 确认搬移的块其中的数据页状态是一致的
+	map_flag= -1;
+	for( q = 0; q < PAGE_NUM_PER_BLK; q++){
+		if(nand_blk[wear_src_blk_no].page_status[q] == 1){ //map block
+     	   // test debug print zhoujie
+	    	printf("wear level block gcc select blk no: %d\n",wear_src_blk_no);
+        	for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
+				if(nand_blk[wear_src_blk_no].page_status[q] == 0 ){
+					printf("something corrupted1=%d",wear_src_blk_no);
+        		}
+      		}
+      		map_flag = 0;
+      		break;
+    	} 
+    	else if(nand_blk[wear_src_blk_no].page_status[q] == 0){ //data block
+      		for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
+        		if(nand_blk[wear_src_blk_no].page_status[q] == 1 ){
+          			printf("something corrupted2=%d",wear_src_blk_no);
+        		}
+      		}
+      		map_flag = 1;
+      		break;
+    	}
+  	}
+
+	ASSERT ( map_flag== 0 || map_flag == 1);
+	
+ 	pos = 0;
+ 	merge_count = 0;
+//	将冷块的数据更新到对应的磨损块 
+ 	for (i = 0; i < PAGE_NUM_PER_BLK; i++) 
+ 	{
+ 		//首先模拟块读 
+		//读取整个物理块，按页一个个读取
+		valid_flag = nand_oob_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE));
+   		if(valid_flag == 1)
+   		{
+	   		valid_sect_num = nand_page_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE), copy, 1);
+	   		merge_count++;
+	   		ASSERT(valid_sect_num == 4);
+	   		k=0;
+	   		for (j = 0; j < valid_sect_num; j++) {
+		 		copy_lsn[k] = copy[j];
+		 		k++;
+	   		}
+//			 这里要区分更新的是数据块还是翻译页冷块
+		 	if(nand_blk[wear_src_blk_no].page_status[i] == 1)
+		 	{	
+//		 		翻译页修改对应的GTD --> mapdir
+		   		mapdir[(copy_lsn[s]/SECT_NUM_PER_PAGE)].ppn	= BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
+		   		opagemap[copy_lsn[s]/SECT_NUM_PER_PAGE].ppn = BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
+//				TODO 确认后续的nand page write 没有问题		
+		   		nand_page_write(SECTOR(wear_target_blk_no,wear_target_page_no) & (~OFF_MASK_SECT), copy_lsn, 1, 2);
+		   		wear_target_page_no+= SECT_NUM_PER_PAGE;
+		 	}
+		 	else{
+//             选择的是数据块冷块
+		   		opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].ppn = BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
+		   		nand_page_write(SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT), copy_lsn, 1, 1);
+		   		wear_target_page_no+= SECT_NUM_PER_PAGE;
+//            一般根据选冷块的原则是不会出现数据页映射项在CMT中的情况，因此延迟更新delay_flash_update 一般不累加
+		   		if((opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_REAL) || (opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_GHOST)) {
+			 		delay_flash_update++;
+		   		}
+		   		else {
+//				后面更新对应的翻译页		
+			 		map_arr[pos] = copy_lsn[s];
+			 		pos++;
+		   		} 
+			}
+   		}
+ 	}//end-for
+//	处理后续的数据页翻译项的更新
+	for(i=0;i < PAGE_NUM_PER_BLK;i++) {
+		temp_arr[i]=-1;
+	}
+	k=0;
+//	这段就是将属于同一翻译页的不同翻译项整合在一起
+	for(i =0 ; i < pos; i++) {
+		old_flag = 0;
+		for( j = 0 ; j < k; j++) {
+//			根据翻译项---> 对应的翻译页---> 翻译页对应的物理页ppn		
+			if(temp_arr[j] == mapdir[((map_arr[i]/SECT_NUM_PER_PAGE)/MAP_ENTRIES_PER_PAGE)].ppn) {
+				if(temp_arr[j] == -1){
+					printf("something wrong");
+					ASSERT(0);
+				}
+				old_flag = 1;
+				break;
+		 	}
+		}
+		if( old_flag == 0 ) {
+			//temp_arr村的是物理翻译页号
+		 	temp_arr[k] = mapdir[((map_arr[i]/SECT_NUM_PER_PAGE)/MAP_ENTRIES_PER_PAGE)].ppn;
+			// temp_arr存的是更新的数据页逻辑扇区地址
+		 	temp_arr1[k] = map_arr[i];
+		 	k++;
+		}
+		else
+	  		save_count++;
+	}//end-for
+//	确定好要更新的翻译页下发更新	
+	for ( i=0; i < k; i++) {
+		if (free_page_no[0] >= SECT_NUM_PER_BLK) {
+			if((free_blk_no[0] = nand_get_free_blk(1)) == -1){
+				printf("we are in big trouble shudnt happen");
+			}
+			free_page_no[0] = 0;
+		}
+		nand_page_read(temp_arr[i]*SECT_NUM_PER_PAGE,copy,1);
+
+		for(m = 0; m<SECT_NUM_PER_PAGE; m++){
+			nand_invalidate(mapdir[((temp_arr1[i]/SECT_NUM_PER_PAGE)/MAP_ENTRIES_PER_PAGE)].ppn*SECT_NUM_PER_PAGE+m, copy[m]);
+		} 
+		nand_stat(OOB_WRITE);
+		mapdir[((temp_arr1[i]/SECT_NUM_PER_PAGE)/MAP_ENTRIES_PER_PAGE)].ppn  = BLK_PAGE_NO_SECT(SECTOR(free_blk_no[0], free_page_no[0]));
+		opagemap[((temp_arr1[i]/SECT_NUM_PER_PAGE)/MAP_ENTRIES_PER_PAGE)].ppn = BLK_PAGE_NO_SECT(SECTOR(free_blk_no[0], free_page_no[0]));
+		nand_page_write(SECTOR(free_blk_no[0],free_page_no[0]) & (~OFF_MASK_SECT), copy, 1, 2);
+		free_page_no[0] += SECT_NUM_PER_PAGE;
+	}
+	
+//	统计合并开销
+   	if(merge_count == 0 ) 
+    	merge_switch_num++;
+  	else if(merge_count > 0 && merge_count < PAGE_NUM_PER_BLK)
+    	merge_partial_num++;
+  	else if(merge_count == PAGE_NUM_PER_BLK)
+    	merge_full_num++;
+  	else if(merge_count > PAGE_NUM_PER_BLK){
+    	printf("merge_count =%d PAGE_NUM_PER_BLK=%d",merge_count,PAGE_NUM_PER_BLK);
+    	ASSERT(0);
+  	}
+//	擦除旧的冷数据块
+	nand_erase(wear_src_blk_no);
+ 
+}//end-func
+
+
 
 size_t opm_read(sect_t lsn, sect_t size, int mapdir_flag)
 {
@@ -142,13 +312,7 @@ int opm_gc_run(int small, int mapdir_flag)
     printf("s && k should be 0\n");
     exit(0);
   }
-  
-//test print zj
-//  if(mapdir_flag==1){
-//  	printf("opm gc run--> gc data blk\n");
-//  }else{
-//	printf("opm gc run-->gc map blk\n");
-//  }
+ 
 
   small = -1;
 
