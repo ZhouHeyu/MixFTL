@@ -77,7 +77,7 @@ void opm_wear_level(int target_blk_no)
 {
 
 	int merge_count;
-	int i,z, j,m,map_flag;
+	int i,z, j,m,map_flag,q;
 	int k,old_flag,temp_arr[PAGE_NUM_PER_BLK],temp_arr1[PAGE_NUM_PER_BLK],map_arr[PAGE_NUM_PER_BLK]; 
 	int valid_flag,pos;
 	_u32 copy_lsn[SECT_NUM_PER_PAGE], copy[SECT_NUM_PER_PAGE];
