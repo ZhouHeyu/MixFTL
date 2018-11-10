@@ -91,6 +91,7 @@ void opm_wear_level(int target_blk_no)
 	
 	// target-blk-no nand_blk state free must to be 0
 	nand_blk[target_blk_no].state.free=0;
+	free_blk_num--;
 	
 	wear_src_page_no=0;
 	wear_target_page_no=0;
