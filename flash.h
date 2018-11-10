@@ -119,6 +119,9 @@ _u32 stat_oob_read_num, stat_oob_write_num;
 _u32 my_wear_level_threshold;
 extern double my_gloabl_nand_blk_wear_ave;
 void nand_blk_ecn_ave_static();
+_u32 find_switch_cold_blk_method1();
+_u32 find_switch_cold_blk_method2();
+
 
 #endif 
 //源码内部定义了磨损均衡度，但是没有使用?

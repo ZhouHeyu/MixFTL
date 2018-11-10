@@ -22,6 +22,7 @@ _u32 nand_blk_num, min_fb_num;
 //zhoujie
 static _u32 last_blk_pc;
 static int Min_N_Prime,Liner_S,Liner_L;
+static int my_all_nand_ecn_counts;
 double my_gloabl_nand_blk_wear_ave;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
@@ -248,6 +249,7 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   Min_N_Prime=FindMinPrime(blk_num);
   Liner_S=(int)blk_num*0.5;
   Liner_L=Liner_S;
+  my_all_nand_ecn_counts=0;
   
 //test print
   printf("blk_num is %d\tMinPrime is %d\n",blk_num,Min_N_Prime);
@@ -507,6 +509,9 @@ void nand_erase (_u32 blk_no)
   }
 
   free_blk_num++;
+  // add zhoujie
+  my_all_nand_ecn_counts++;
+  my_wear_level_threshold=my_wear_level_threshold*1.0/nand_blk_num;
 
   nand_stat(BLOCK_ERASE);
 }
