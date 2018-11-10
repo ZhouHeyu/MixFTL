@@ -103,7 +103,7 @@ void opm_wear_level(int target_blk_no)
 	for( q = 0; q < PAGE_NUM_PER_BLK; q++){
 		if(nand_blk[wear_src_blk_no].page_status[q] == 1){ //map block
      	   // test debug print zhoujie
-	    	printf("wear level block gcc select blk no: %d\n",wear_src_blk_no);
+	    	printf("wear level block gcc select Map blk no: %d\n",wear_src_blk_no);
         	for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
 				if(nand_blk[wear_src_blk_no].page_status[q] == 0 ){
 					printf("something corrupted1=%d",wear_src_blk_no);
@@ -113,6 +113,7 @@ void opm_wear_level(int target_blk_no)
       		break;
     	} 
     	else if(nand_blk[wear_src_blk_no].page_status[q] == 0){ //data block
+    		printf("wear level block gcc select Data blk no: %d\n",wear_src_blk_no);
       		for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
         		if(nand_blk[wear_src_blk_no].page_status[q] == 1 ){
           			printf("something corrupted2=%d",wear_src_blk_no);
