@@ -245,7 +245,7 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   memset(nand_blk_bit_map,0,sizeof(int)*blk_num);
 
 // 初始化磨损的差异阈值
-  my_wear_level_threshold=10;
+  my_wear_level_threshold=3;
   Min_N_Prime=FindMinPrime(blk_num);
   Liner_S=(int)blk_num*0.5;
   Liner_L=Liner_S;
