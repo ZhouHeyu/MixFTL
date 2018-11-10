@@ -32,6 +32,8 @@ static _u16 wear_src_page_no,wear_target_page_no;
 int stat_wear_gc_called_num;
 double total_wear_gc_overhead_time;
 
+//debug
+static int called_wear_num;
 
 extern int merge_switch_num;
 extern int merge_partial_num;
@@ -86,6 +88,9 @@ void opm_wear_level(int target_blk_no)
 	//确定选择交换的冷块数据
 	wear_src_blk_no=find_switch_cold_blk_method1();
 	wear_target_blk_no=target_blk_no;
+	
+	// target-blk-no nand_blk state free must to be 0
+	nand_blk[target_blk_no].state.free=0;
 	
 	wear_src_page_no=0;
 	wear_target_page_no=0;
@@ -457,7 +462,9 @@ int opm_gc_run(int small, int mapdir_flag)
 
   nand_erase(victim_blk_no);
 // add zhoujie 11-10 超过给定阈值开启 磨损均衡
+
    if(nand_blk[victim_blk_no].state.ec > (int)(my_gloabl_nand_blk_wear_ave + my_wear_level_threshold)){
+	    printf("called opm wear level %d\n",++called_wear_num);
 		opm_wear_level( victim_blk_no );
    }
 
@@ -635,6 +642,9 @@ int opm_init(blk_t blk_num, blk_t extra_num)
   write_count =0;
   read_count = 0;
   save_count = 0;
+  
+  // debug test 11-10 
+  called_wear_num=0;
 
   //update 2nd mapping table
   for(i = 0; i<mapdir_num; i++){

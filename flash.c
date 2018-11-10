@@ -180,11 +180,20 @@ _u32 find_switch_cold_blk_method1()
 		printf("nand_blk_bit_map value all larger than 0!\n");
 	}
 	while(1){
-		if(nand_blk[Liner_L].state.ec < my_gloabl_nand_blk_wear_ave
-			&& nand_blk_bit_map[Liner_L] == min_bitmap_value ){
-				break;
-		}
 		Liner_L=(Liner_S+Liner_L) % Min_N_Prime;
+		if(Liner_L < nand_blk_num ) {
+			// init time my_global_nand_blk_wear_ave is 0!
+			if (my_gloabl_nand_blk_wear_ave == 0 && nand_blk[Liner_L].fpc ==0 
+				&& nand_blk[Liner_L].state.free == 0 ){
+				break;
+			}
+			if(nand_blk[Liner_L].state.ec < my_gloabl_nand_blk_wear_ave
+				&& nand_blk_bit_map[Liner_L] == min_bitmap_value 
+				&& nand_blk[Liner_L].state.free ==0 && nand_blk[Liner_L].fpc ==0 ){
+					break;
+			}
+		}
+
 	}
 	return (_u32)Liner_L;
 }
@@ -511,7 +520,7 @@ void nand_erase (_u32 blk_no)
   free_blk_num++;
   // add zhoujie
   my_all_nand_ecn_counts++;
-  my_wear_level_threshold=my_wear_level_threshold*1.0/nand_blk_num;
+  my_gloabl_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
 
   nand_stat(BLOCK_ERASE);
 }
@@ -545,8 +554,6 @@ _u32 nand_get_free_blk (int isGC)
 {
   _u32 blk_no = -1, i;
   int flag = 0,flag1=0;
-  flag = 0;
-  flag1 = 0;
 
   MIN_ERASE = 9999999;
   //in case that there is no avaible free block -> GC should be called !
