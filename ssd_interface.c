@@ -58,6 +58,7 @@ double sum_of_service_time = 0.0;
 double sum_of_response_time = 0.0;
 unsigned int total_num_of_req = 0;
 
+
 /***********************************************************************
   Mapping table
  ***********************************************************************/
@@ -236,6 +237,7 @@ void send_flash_request(int start_blk_no, int block_cnt, int operation, int mapd
 			start_blk_no += size;
 			block_cnt-=size;
 		}
+		
 		break;
 	//read
 	case 1:
@@ -432,7 +434,6 @@ double callFsim(unsigned int secno, int scount, int operation)
         // opagemap ftl scheme
         else if(ftl_type == 3)
         {
-
           /************************************************
             primary map table 
           *************************************************/
@@ -442,8 +443,7 @@ double callFsim(unsigned int secno, int scount, int operation)
           if((opagemap[blkno].map_status == MAP_REAL) || (opagemap[blkno].map_status == MAP_GHOST))
           {
             cache_hit++;
-
-            opagemap[blkno].map_age++;
+			opagemap[blkno].map_age++;
 
             if(opagemap[blkno].map_status == MAP_GHOST){
 
@@ -500,8 +500,8 @@ double callFsim(unsigned int secno, int scount, int operation)
                   update_reqd++;
                   opagemap[min_ghost].update = 0;
                   send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);   // read from 2nd mapping table then update it
-
-                  send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);   // write into 2nd mapping table 
+                  send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);   // write into 2nd mapping table  
+		
                 } 
                 opagemap[min_ghost].map_status = MAP_INVALID;
 

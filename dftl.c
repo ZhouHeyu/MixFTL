@@ -316,6 +316,7 @@ int opm_gc_run(int small, int mapdir_flag)
 
   _u32 copy_lsn[SECT_NUM_PER_PAGE], copy[SECT_NUM_PER_PAGE];
   _u16 valid_sect_num,  l, s;
+  _u32 old_ppn,new_ppn;
 
   victim_blk_no = opm_gc_cost_benefit();
 
@@ -393,8 +394,10 @@ int opm_gc_run(int small, int mapdir_flag)
             free_page_no[small] += SECT_NUM_PER_PAGE;
           }
           else{
-
-
+//          add zhoujie 11-12
+			old_ppn=opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].ppn;
+			new_ppn=BLK_PAGE_NO_SECT(SECTOR(free_blk_no[small], free_page_no[small]));
+			
             opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].ppn = BLK_PAGE_NO_SECT(SECTOR(free_blk_no[small], free_page_no[small]));
 
             nand_page_write(SECTOR(free_blk_no[small],free_page_no[small]) & (~OFF_MASK_SECT), copy_lsn, 1, 1);
@@ -402,6 +405,9 @@ int opm_gc_run(int small, int mapdir_flag)
 
             if((opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_REAL) || (opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_GHOST)) {
               delay_flash_update++;
+//			add zhoujie 11-12
+			  nand_ppn_2_lpn_in_CMT_arr[old_ppn]=0;
+			  nand_ppn_2_lpn_in_CMT_arr[new_ppn]=1;
             }
         
             else {
@@ -493,6 +499,7 @@ size_t opm_write(sect_t lsn, sect_t size, int mapdir_flag)
   int size_page = size/SECT_NUM_PER_PAGE; // size in page 
   int ppn;
   int small;
+  int old_ppn,new_ppn;
 
   sect_t lsns[SECT_NUM_PER_PAGE];
   int sect_num = SECT_NUM_PER_PAGE;
@@ -545,7 +552,12 @@ size_t opm_write(sect_t lsn, sect_t size, int mapdir_flag)
   ppn = s_psn / SECT_NUM_PER_PAGE;
 
   if (opagemap[lpn].free == 0) {
+//  add zhoujie 11-12
+	old_ppn=opagemap[lpn].ppn;
+	nand_ppn_2_lpn_in_CMT_arr[old_ppn]=0;
+	
     s_psn1 = opagemap[lpn].ppn * SECT_NUM_PER_PAGE;
+	
     for(i = 0; i<SECT_NUM_PER_PAGE; i++){
       nand_invalidate(s_psn1 + i, s_lsn + i);
     } 
@@ -565,6 +577,10 @@ size_t opm_write(sect_t lsn, sect_t size, int mapdir_flag)
     opagemap[lpn].ppn = ppn;
   }
   else {
+// สýพÝาณ add zhoujie 11-12
+	if(opagemap[lpn].map_status == MAP_REAL || opagemap[lpn].map_status == MAP_GHOST ){
+		nand_ppn_2_lpn_in_CMT_arr[ppn]=1;
+	}
     opagemap[lpn].ppn = ppn;
   }
 
