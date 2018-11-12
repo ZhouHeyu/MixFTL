@@ -88,7 +88,8 @@ void opm_wear_level(int target_blk_no)
 	_u32 old_ppn,new_ppn;
 	
 	//确定选择交换的冷块数据
-	wear_src_blk_no=find_switch_cold_blk_method1();
+//	wear_src_blk_no=find_switch_cold_blk_method1();
+	wear_src_blk_no=find_switch_cold_blk_method2();
 	wear_target_blk_no=target_blk_no;
 	
 	// target-blk-no nand_blk state free must to be 0
