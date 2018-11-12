@@ -171,8 +171,8 @@ void Static_pbn_map_entry_in_CMT()
 	int i,j,k;
 	int blk_s,blk_e;
 	for( i=0 ; i < nand_blk_num; i++){
-		blk_s=nand_blk_num * i;
-		blk_e=nand_blk_num * (i+1);
+		blk_s=PAGE_NUM_PER_BLK * i;
+		blk_e=PAGE_NUM_PER_BLK * (i+1);
 		k=0;
 		for( j = blk_s ; j < blk_e ; j++){
 			if ( nand_ppn_2_lpn_in_CMT_arr[j] == 1 ){
