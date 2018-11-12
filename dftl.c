@@ -150,8 +150,8 @@ void opm_wear_level(int target_blk_no)
 		 	if(nand_blk[wear_src_blk_no].page_status[i] == 1)
 		 	{	
 //		 		翻译页修改对应的GTD --> mapdir
-		   		mapdir[(copy_lsn[s]/SECT_NUM_PER_PAGE)].ppn	= BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
-		   		opagemap[copy_lsn[s]/SECT_NUM_PER_PAGE].ppn = BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
+		   		mapdir[(copy_lsn[0]/SECT_NUM_PER_PAGE)].ppn	= BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
+		   		opagemap[copy_lsn[0]/SECT_NUM_PER_PAGE].ppn = BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
 //				TODO 确认后续的nand page write 没有问题		
 		   		nand_page_write(SECTOR(wear_target_blk_no,wear_target_page_no) & (~OFF_MASK_SECT), copy_lsn, 1, 2);
 		   		wear_target_page_no+= SECT_NUM_PER_PAGE;
@@ -159,26 +159,26 @@ void opm_wear_level(int target_blk_no)
 		 	else{
 //             选择的是数据块冷块
 //				保留旧的ppn，便于后续的标志位修改
-				old_ppn=opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].ppn;
+				old_ppn=opagemap[BLK_PAGE_NO_SECT(copy_lsn[0])].ppn;
 //				debug printf
 				if(old_ppn != BLK_PAGE_NO_SECT(SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE))){
 					printf("debug :old ppn:%d\t BLK_PAGE_NO_SECT:%d\n",old_ppn,BLK_PAGE_NO_SECT(SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE)));
 				}
 				
-		   		opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].ppn = BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
+		   		opagemap[BLK_PAGE_NO_SECT(copy_lsn[0])].ppn = BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
 				new_ppn=BLK_PAGE_NO_SECT(SECTOR(wear_target_blk_no, wear_target_page_no));
 				
 		   		nand_page_write(SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT), copy_lsn, 1, 1);
 		   		wear_target_page_no+= SECT_NUM_PER_PAGE;
 //            一般根据选冷块的原则是不会出现数据页映射项在CMT中的情况，因此延迟更新delay_flash_update 一般不累加
-		   		if((opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_REAL) || (opagemap[BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_GHOST)) {
+		   		if((opagemap[BLK_PAGE_NO_SECT(copy_lsn[0])].map_status == MAP_REAL) || (opagemap[BLK_PAGE_NO_SECT(copy_lsn[0])].map_status == MAP_GHOST)) {
 			 		delay_flash_update++;
 					nand_ppn_2_lpn_in_CMT_arr[old_ppn]=0;
 					nand_ppn_2_lpn_in_CMT_arr[new_ppn]=1;
 		   		}
 		   		else {
 //				后面更新对应的翻译页		
-			 		map_arr[pos] = copy_lsn[s];
+			 		map_arr[pos] = copy_lsn[0];
 			 		pos++;
 		   		} 
 			}
