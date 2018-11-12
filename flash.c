@@ -195,6 +195,7 @@ void Static_pbn_map_entry_in_CMT()
 _u32 find_switch_cold_blk_method1()
 {
 	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
+	
 // add zhoujie 11-12
 	Static_pbn_map_entry_in_CMT();
 	
@@ -210,7 +211,7 @@ _u32 find_switch_cold_blk_method1()
 		Liner_L=(Liner_S+Liner_L) % Min_N_Prime;
 		if(Liner_L < nand_blk_num ) {
 			// init time my_global_nand_blk_wear_ave is 0!
-			if (my_gloabl_nand_blk_wear_ave == 0 && nand_blk[Liner_L].fpc ==0 
+			if (my_gloabl_nand_blk_wear_ave < 0.5  && nand_blk[Liner_L].fpc ==0 
 				&& nand_blk[Liner_L].state.free == 0 ){
 				break;
 			}
@@ -234,6 +235,8 @@ _u32 find_switch_cold_blk_method1()
 _u32 find_switch_cold_blk_method2()
 {
 	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
+	Static_pbn_map_entry_in_CMT();
+	
 	for(i = 0 ;i < nand_blk_num; i++){
 		if(nand_blk_bit_map[i] < min_bitmap_value)
 			min_bitmap_value = nand_blk_bit_map[i];
@@ -246,8 +249,15 @@ _u32 find_switch_cold_blk_method2()
 	while(1){
 		if( last_blk_pc >= nand_blk_num )
 			last_blk_pc = 0;
+
+		if (my_gloabl_nand_blk_wear_ave < 0.5 && nand_blk[last_blk_pc].fpc ==0 
+				&& nand_blk[last_blk_pc].state.free == 0 ){
+				break;
+		}
+		
 		if( nand_blk[last_blk_pc].state.ec < my_gloabl_nand_blk_wear_ave
-			&& nand_blk_bit_map[last_blk_pc] == min_bitmap_value ) {
+			&& nand_blk_bit_map[last_blk_pc] == min_bitmap_value 
+			&& nand_blk[last_blk_pc].state.free ==0 && nand_blk[last_blk_pc].fpc ==0) {
 			break;
 		}
 		
