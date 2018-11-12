@@ -24,6 +24,7 @@ static _u32 last_blk_pc;
 static int Min_N_Prime,Liner_S,Liner_L;
 static int my_all_nand_ecn_counts;
 double my_gloabl_nand_blk_wear_ave;
+static int my_min_nand_wear_ave=5;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
 
@@ -211,7 +212,7 @@ _u32 find_switch_cold_blk_method1()
 		Liner_L=(Liner_S+Liner_L) % Min_N_Prime;
 		if(Liner_L < nand_blk_num ) {
 			// init time my_global_nand_blk_wear_ave is 0!
-			if (my_gloabl_nand_blk_wear_ave < 0.5  && nand_blk[Liner_L].fpc ==0 
+			if (my_gloabl_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[Liner_L].fpc ==0 
 				&& nand_blk[Liner_L].state.free == 0 ){
 				break;
 			}
@@ -250,7 +251,7 @@ _u32 find_switch_cold_blk_method2()
 		if( last_blk_pc >= nand_blk_num )
 			last_blk_pc = 0;
 
-		if (my_gloabl_nand_blk_wear_ave < 0.5 && nand_blk[last_blk_pc].fpc ==0 
+		if (my_gloabl_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[last_blk_pc].fpc ==0 
 				&& nand_blk[last_blk_pc].state.free == 0 ){
 				break;
 		}
