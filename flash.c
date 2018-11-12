@@ -163,6 +163,30 @@ void nand_blk_ecn_ave_static()
 }
 
 /*
+* add zhoujie 11-10
+* static pbn ppn to lpn entry in CMT count
+*/
+void Static_pbn_map_entry_in_CMT()
+{
+	int i,j,k;
+	int blk_s,blk_e;
+	for( i=0 ; i < nand_blk_num; i++){
+		blk_s=nand_blk_num * i;
+		blk_e=nand_blk_num * (i+1);
+		k=0;
+		for( j = blk_s ; j < blk_e ; j++){
+			if ( nand_ppn_2_lpn_in_CMT_arr[j] == 1 ){
+				k++;	
+			}
+		}
+		nand_pbn_2_lpn_in_CMT_arr[i]=k;
+		nand_blk_bit_map[i]=k;
+	}
+}
+
+
+
+/*
 * add zhoujie 11-8
 * 选择一个冷块进行数据交换（方法1）
 * 生成一个初始的随机数，利用代数取余方式进行遍历
@@ -171,6 +195,9 @@ void nand_blk_ecn_ave_static()
 _u32 find_switch_cold_blk_method1()
 {
 	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
+// add zhoujie 11-12
+	Static_pbn_map_entry_in_CMT();
+	
 	for(i = 0 ;i < nand_blk_num; i++){
 		if(nand_blk_bit_map[i] < min_bitmap_value)
 			min_bitmap_value = nand_blk_bit_map[i];
@@ -251,10 +278,20 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   {
   	return -1;
   }
-  memset(nand_blk_bit_map,0,sizeof(int)*blk_num);
+  memset(nand_blk_bit_map,0,sizeof(int) * blk_num);
+// add zhoujie 11-10
+  nand_pbn_2_lpn_in_CMT_arr=(int *)malloc( sizeof(int) * blk_num);
+  nand_ppn_2_lpn_in_CMT_arr=(int *)malloc( sizeof(int) * blk_num * PAGE_NUM_PER_BLK);
+  if (nand_pbn_2_lpn_in_CMT_arr == NULL || nand_ppn_2_lpn_in_CMT_arr == NULL )
+  {
+  	return -1;
+  }
+  memset(nand_ppn_2_lpn_in_CMT_arr,0,sizeof(int) * blk_num * PAGE_NUM_PER_BLK);
+  memset(nand_pbn_2_lpn_in_CMT_arr,0,sizeof(int) * blk_num );
+
 
 // 初始化磨损的差异阈值
-  my_wear_level_threshold=3;
+  my_wear_level_threshold=20;
   Min_N_Prime=FindMinPrime(blk_num);
   Liner_S=(int)blk_num*0.5;
   Liner_L=Liner_S;
@@ -305,6 +342,12 @@ void nand_end ()
   }
   if (nand_blk_bit_map != NULL){
 	nand_blk_bit_map=NULL;
+  }
+  if(nand_pbn_2_lpn_in_CMT_arr != NULL ){
+	nand_pbn_2_lpn_in_CMT_arr = NULL;
+  }
+  if(nand_ppn_2_lpn_in_CMT_arr != NULL ){
+	nand_ppn_2_lpn_in_CMT_arr = NULL;
   }
 }
 
