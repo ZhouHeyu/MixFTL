@@ -24,6 +24,9 @@ static _u32 last_blk_pc;
 static int Min_N_Prime,Liner_S,Liner_L;
 static int my_all_nand_ecn_counts;
 double my_gloabl_nand_blk_wear_ave;
+
+double my_global_no_free_nand_blk_wear_ave;
+
 static int my_min_nand_wear_ave=5;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
@@ -164,6 +167,29 @@ void nand_blk_ecn_ave_static()
 }
 
 /*
+*add zhoujie 11-8
+* 统计全局块的平均块擦除次数
+*
+*/
+void nand_no_free_blk_ecn_ave_static()
+{
+	int i,j=0;
+	_u32 all_ecn=0;
+	for(i=0;i<nand_blk_num;i++) {
+		if(nand_blk[i].state.free == 0 ){
+			all_ecn+=nand_blk[i].state.ec;
+			j++;
+			//最大值越界报错处理(超出u32的最大地址区间4,294,967,296)
+			if(all_ecn >= 4294967296){
+				printf("all ecn sum is over limit 4294967296\n");
+				assert(0);
+			}
+	}
+	my_global_no_free_nand_blk_wear_ave=all_ecn*1.0/j;
+}
+
+
+/*
 * add zhoujie 11-10
 * static pbn ppn to lpn entry in CMT count
 */
@@ -193,7 +219,7 @@ void Static_pbn_map_entry_in_CMT()
 * 生成一个初始的随机数，利用代数取余方式进行遍历
 */
 
-_u32 find_switch_cold_blk_method1()
+_u32 find_switch_cold_blk_method1(int victim_blk_no)
 {
 	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
 	
@@ -216,7 +242,7 @@ _u32 find_switch_cold_blk_method1()
 				&& nand_blk[Liner_L].state.free == 0 ){
 				break;
 			}
-			if(nand_blk[Liner_L].state.ec < my_gloabl_nand_blk_wear_ave
+			if(nand_blk[Liner_L].state.ec < my_gloabl_nand_blk_wear_ave+my_min_nand_wear_ave
 				&& nand_blk_bit_map[Liner_L] == min_bitmap_value 
 				&& nand_blk[Liner_L].state.free ==0 && nand_blk[Liner_L].fpc ==0 ){
 					break;
@@ -233,7 +259,7 @@ _u32 find_switch_cold_blk_method1()
 * 选择一个冷块进行数据交换(方法2)
 * 按一个历史值记录值进行标记，大循环遍历
 */
-_u32 find_switch_cold_blk_method2()
+_u32 find_switch_cold_blk_method2(int victim_blk_no)
 {
 	int i,min_bitmap_value = PAGE_NUM_PER_BLK;
 	Static_pbn_map_entry_in_CMT();
@@ -256,7 +282,7 @@ _u32 find_switch_cold_blk_method2()
 				break;
 		}
 		
-		if( nand_blk[last_blk_pc].state.ec < (my_gloabl_nand_blk_wear_ave+1)
+		if( nand_blk[last_blk_pc].state.ec < (my_gloabl_nand_blk_wear_ave+my_min_nand_wear_ave)
 			&& nand_blk_bit_map[last_blk_pc] == min_bitmap_value 
 			&& nand_blk[last_blk_pc].state.free ==0 && nand_blk[last_blk_pc].fpc ==0) {
 			break;
