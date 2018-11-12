@@ -184,6 +184,7 @@ void nand_no_free_blk_ecn_ave_static()
 				printf("all ecn sum is over limit 4294967296\n");
 				assert(0);
 			}
+		}
 	}
 	my_global_no_free_nand_blk_wear_ave=all_ecn*1.0/j;
 }
@@ -206,8 +207,8 @@ void Static_pbn_map_entry_in_CMT()
 				k++;	
 			}
 		}
-		nand_pbn_2_lpn_in_CMT_arr[i]=k;
-		nand_blk_bit_map[i]=k;
+		nand_pbn_2_lpn_in_CMT_arr[i] = k;
+		nand_blk_bit_map[i] = k;
 	}
 }
 
