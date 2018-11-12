@@ -121,6 +121,10 @@ extern double my_gloabl_nand_blk_wear_ave;
 void nand_blk_ecn_ave_static();
 _u32 find_switch_cold_blk_method1();
 _u32 find_switch_cold_blk_method2();
+// add zhoujie 11-10
+//添加辅助信息确定物理块的数据页的映射项是否存在于映射缓存中
+int * nand_ppn_2_lpn_in_CMT_arr;
+int * nand_pbn_2_lpn_in_CMT_arr;
 
 
 #endif 
