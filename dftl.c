@@ -175,7 +175,6 @@ void opm_wear_level(int target_blk_no)
 			 		delay_flash_update++;
 					nand_ppn_2_lpn_in_CMT_arr[old_ppn]=0;
 					nand_ppn_2_lpn_in_CMT_arr[new_ppn]=1;
-					
 		   		}
 		   		else {
 //				后面更新对应的翻译页		
