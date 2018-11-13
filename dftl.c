@@ -27,7 +27,7 @@
 #define N_wear_var 4
 void Select_Wear_Level_Threshold(int Type);
 
-int Wear_Threshold_Type=AVE_ADD_N_VAR;
+int Wear_Threshold_Type=STATIC_THRESHOLD;
 
 
 _u32 opm_gc_cost_benefit();
