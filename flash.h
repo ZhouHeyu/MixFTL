@@ -116,7 +116,7 @@ _u32 stat_oob_read_num, stat_oob_write_num;
 _u32 min_fb_num;
 //zhoujie add 
 //自己定义的磨损均衡阈值偏差
-_u32 my_wear_level_threshold;
+double my_wear_level_threshold;
 extern double my_global_nand_blk_wear_ave;
 extern double my_global_nand_blk_wear_std;
 extern double my_global_nand_blk_wear_var;

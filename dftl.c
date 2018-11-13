@@ -18,6 +18,18 @@
 #include "ssd_interface.h"
 #include "disksim_global.h"
 
+//磨损均衡阈值的几种选择方案
+#define STATIC_THRESHOLD 0
+#define DYNAMIC_THRESHOLD 1
+#define AVE_ADD_N_VAR 2
+#define static_wear_threshold 20
+//阈值相关系数
+#define N_wear_var 3;
+void Select_Wear_Level_Threshold(int Type);
+
+int Wear_Threshold_Type=AVE_ADD_N_VAR;
+
+
 _u32 opm_gc_cost_benefit();
 
 struct omap_dir *mapdir;
@@ -489,16 +501,51 @@ int opm_gc_run(int small, int mapdir_flag)
 
   nand_erase(victim_blk_no);
 // add zhoujie 11-10 超过给定阈值开启 磨损均衡
+  Select_Wear_Level_Threshold(Wear_Threshold_Type);
 
-   if(nand_blk[victim_blk_no].state.ec > (int)(my_global_nand_blk_wear_ave + my_wear_level_threshold)){
+  if(nand_blk[victim_blk_no].state.ec > (int)(my_global_nand_blk_wear_ave + my_wear_level_threshold)){
+  		opm_wear_level( victim_blk_no );
 #ifdef DEBUG
-	    printf("called opm wear level %d\n",++called_wear_num);
+		switch(Wear_Threshold_Type){
+				case STATIC_THRESHOLD: 
+					printf("THRESHOLD TYPE is static threshold\n");
+					break;
+				case DYNAMIC_THRESHOLD:
+					printf("THRESHOLD TYPE is dynamic threshold\n");
+					break;
+				case  AVE_ADD_N_VAR:
+					printf("THRESHOLD TYPE is ave add %d * var\n",N_wear_var);
+					break;
+				default : assert(0);break;
+		}
+		printf("called opm wear level %d\n",++called_wear_num);
 #endif
-		opm_wear_level( victim_blk_no );
+
    }
 
 
   return (benefit + 1);
+}
+
+/*
+* add zhoujie 11-13
+* 选择磨损均衡阈值调整的方式
+*/
+void Select_Wear_Level_Threshold(int Type)
+{
+ switch(Type){
+ 	case STATIC_THRESHOLD: 
+		my_wear_level_threshold=static_wear_threshold;
+		break;
+	case DYNAMIC_THRESHOLD:
+//		my_wear_level_threshold
+		break;
+	case  AVE_ADD_N_VAR:
+		nand_blk_ecn_std_var_static();
+		my_wear_level_threshold=N_wear_var*my_global_nand_blk_wear_var;
+		break;
+	default : break;
+ }
 }
 
 size_t opm_write(sect_t lsn, sect_t size, int mapdir_flag)  
