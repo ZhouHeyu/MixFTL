@@ -502,9 +502,9 @@ double callFsim(unsigned int secno, int scount, int operation)
                   opagemap[min_ghost].update = 0;
                   send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);   // read from 2nd mapping table then update it
                   send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);   // write into 2nd mapping table  
-//					add zhoujie 11-13
-				  nand_ppn_2_lpn_in_CMT_arr[opagemap[min_ghost].ppn]=0;
                 } 
+//				add zhoujie 11-13
+				nand_ppn_2_lpn_in_CMT_arr[opagemap[min_ghost].ppn]=0;
                 opagemap[min_ghost].map_status = MAP_INVALID;
 
                 MAP_GHOST_NUM_ENTRIES--;
@@ -551,7 +551,23 @@ double callFsim(unsigned int secno, int scount, int operation)
             
             pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
             real_arr[pos] = blkno;
-//          add zhoujie cycle debug
+			
+          }
+
+         //comment out the next line when using cache
+          if(operation==0){
+            write_count++;
+            opagemap[blkno].update = 1;
+          }
+          else
+             read_count++;
+//       数据页无论读写，最后的映射项都加载到了CMT中，之后的映射项修改标志位可以在write函数里面修改 add zhoujie 11-13
+		  nand_ppn_2_lpn_in_CMT_arr[opagemap[blkno].ppn]=1;
+
+          send_flash_request(blkno*4, 4, operation, 1); 
+          blkno++;
+
+//		add zhoujie cycle debug
 			if(rqst_cnt%10000 == 0){
 				debug_j=0;
 				for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
@@ -564,20 +580,7 @@ double callFsim(unsigned int secno, int scount, int operation)
 					assert(0);
 				}
 			}
-
-			
-          }
-
-         //comment out the next line when using cache
-          if(operation==0){
-            write_count++;
-            opagemap[blkno].update = 1;
-          }
-          else
-             read_count++;
-
-          send_flash_request(blkno*4, 4, operation, 1); 
-          blkno++;
+		  
         }
 
         // FAST scheme  
