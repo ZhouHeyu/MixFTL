@@ -484,12 +484,12 @@ int opm_gc_run(int small, int mapdir_flag)
 
   nand_erase(victim_blk_no);
 // add zhoujie 11-10 超过给定阈值开启 磨损均衡
-/*
+
    if(nand_blk[victim_blk_no].state.ec > (int)(my_gloabl_nand_blk_wear_ave + my_wear_level_threshold)){
 	    printf("called opm wear level %d\n",++called_wear_num);
 		opm_wear_level( victim_blk_no );
    }
-*/
+
 
   return (benefit + 1);
 }
