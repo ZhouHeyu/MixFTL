@@ -163,8 +163,8 @@ void initFlash()
   total_extr_blk_num = total_blk_num - total_util_blk_num;        // total extra block number
 
   ASSERT(total_extr_blk_num != 0);
-
-  if (nand_init(total_blk_num, 3) < 0) {
+// 设置最小的min blk num
+  if (nand_init(total_blk_num, 30) < 0) {
     EXIT(-4); 
   }
 
