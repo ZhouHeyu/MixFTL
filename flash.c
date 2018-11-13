@@ -35,7 +35,7 @@ static int debug_count1;
 
 double my_global_no_free_nand_blk_wear_ave;
 
-static int my_min_nand_wear_ave=5;
+static int my_min_nand_wear_ave=1;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
 
