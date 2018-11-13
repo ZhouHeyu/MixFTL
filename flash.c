@@ -175,14 +175,14 @@ void nand_blk_ecn_ave_static()
 void nand_blk_ecn_std_var_static()
 {
   int i;
+  double temp = 0.0;
   nand_blk_ecn_ave_static();
-  double temp=0.0;
-  for(i=0;i<nand_blk_num;i++){
-	temp+=(nand_blk[i].state.ec-my_global_nand_blk_wear_ave) * \
-		(nand_blk[i].state.ec-my_global_nand_blk_wear_ave);
+  for(i = 0 ; i < nand_blk_num ; i++){
+	temp += (nand_blk[i].state.ec - my_global_nand_blk_wear_ave) * \
+		(nand_blk[i].state.ec - my_global_nand_blk_wear_ave);
   }
-  my_global_nand_blk_wear_std=temp/nand_blk_num;
-  my_global_nand_blk_wear_var=sqrt(my_global_nand_blk_wear_std);
+  my_global_nand_blk_wear_std = temp / nand_blk_num;
+  my_global_nand_blk_wear_var = sqrt(my_global_nand_blk_wear_std);
   
 }
 
@@ -261,11 +261,11 @@ _u32 find_switch_cold_blk_method1(int victim_blk_no)
 		Liner_L=(Liner_S+Liner_L) % Min_N_Prime;
 		if(Liner_L < nand_blk_num ) {
 			// init time my_global_nand_blk_wear_ave is 0!
-			if (my_gloabl_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[Liner_L].fpc ==0 
+			if (my_global_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[Liner_L].fpc ==0 
 				&& nand_blk[Liner_L].state.free == 0 ){
 				break;
 			}
-			if(nand_blk[Liner_L].state.ec < my_gloabl_nand_blk_wear_ave+my_min_nand_wear_ave
+			if(nand_blk[Liner_L].state.ec < my_global_nand_blk_wear_ave+my_min_nand_wear_ave
 				&& nand_blk_bit_map[Liner_L] == min_bitmap_value 
 				&& nand_blk[Liner_L].state.free ==0 && nand_blk[Liner_L].fpc ==0 ){
 					break;
@@ -300,12 +300,12 @@ _u32 find_switch_cold_blk_method2(int victim_blk_no)
 		if( last_blk_pc >= nand_blk_num )
 			last_blk_pc = 0;
 
-		if (my_gloabl_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[last_blk_pc].fpc ==0 
+		if (my_global_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[last_blk_pc].fpc ==0 
 				&& nand_blk[last_blk_pc].state.free == 0 ){
 				break;
 		}
 		
-		if( nand_blk[last_blk_pc].state.ec < (my_gloabl_nand_blk_wear_ave+my_min_nand_wear_ave)
+		if( nand_blk[last_blk_pc].state.ec < (my_global_nand_blk_wear_ave+my_min_nand_wear_ave)
 			&& nand_blk_bit_map[last_blk_pc] == min_bitmap_value 
 			&& nand_blk[last_blk_pc].state.free ==0 && nand_blk[last_blk_pc].fpc ==0) {
 			break;
