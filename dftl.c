@@ -24,7 +24,7 @@
 #define AVE_ADD_N_VAR 2
 #define static_wear_threshold 20
 //阈值相关系数
-#define N_wear_var 3;
+#define N_wear_var 3
 void Select_Wear_Level_Threshold(int Type);
 
 int Wear_Threshold_Type=AVE_ADD_N_VAR;
