@@ -582,7 +582,7 @@ size_t opm_write(sect_t lsn, sect_t size, int mapdir_flag)
   else {
 // สýพÝาณ add zhoujie 11-12
 	if(opagemap[lpn].map_status == MAP_REAL || opagemap[lpn].map_status == MAP_GHOST ){
-		printf("new ppn:%d\n",new_ppn);
+		printf("new ppn:%d\n",ppn);
 		nand_ppn_2_lpn_in_CMT_arr[ppn]=1;
 	}
     opagemap[lpn].ppn = ppn;
