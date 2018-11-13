@@ -23,7 +23,10 @@ _u32 nand_blk_num;
 static _u32 last_blk_pc;
 static int Min_N_Prime,Liner_S,Liner_L;
 static int my_all_nand_ecn_counts;
-double my_gloabl_nand_blk_wear_ave;
+double my_global_nand_blk_wear_ave;
+double my_global_nand_blk_wear_std;
+double my_global_nand_blk_wear_var;
+
 double my_global_no_free_nand_blk_wear_ave;
 
 static int my_min_nand_wear_ave=5;
@@ -162,11 +165,31 @@ void nand_blk_ecn_ave_static()
 			assert(0);
 		}
 	}
-	my_gloabl_nand_blk_wear_ave=all_ecn*1.0/nand_blk_num;
+	my_global_nand_blk_wear_ave=all_ecn*1.0/nand_blk_num;
 }
 
 /*
-*add zhoujie 11-8
+* add zhoujie 11-13
+* 统计全局块的磨损方差值
+*/
+void nand_blk_ecn_std_var_static()
+{
+  int i;
+  nand_blk_ecn_ave_static();
+  double temp=0.0;
+  for(i=0;i<nand_blk_num;i++){
+	temp+=(nand_blk[i].state.ec-my_global_nand_blk_wear_ave) * \
+		(nand_blk[i].state.ec-my_global_nand_blk_wear_ave);
+  }
+  my_global_nand_blk_wear_std=temp/nand_blk_num;
+  my_global_nand_blk_wear_var=sqrt(my_global_nand_blk_wear_std);
+  
+}
+
+
+
+/*
+*add zhoujie 11-12
 * 统计全局块的平均块擦除次数
 *
 */

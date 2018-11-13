@@ -117,8 +117,13 @@ _u32 min_fb_num;
 //zhoujie add 
 //自己定义的磨损均衡阈值偏差
 _u32 my_wear_level_threshold;
-extern double my_gloabl_nand_blk_wear_ave;
+extern double my_global_nand_blk_wear_ave;
+extern double my_global_nand_blk_wear_std;
+extern double my_global_nand_blk_wear_var;
+
 void nand_blk_ecn_ave_static();
+void nand_blk_ecn_std_var_static();
+
 _u32 find_switch_cold_blk_method1(int victim_blkno);
 _u32 find_switch_cold_blk_method2(int victim_blkno);
 // add zhoujie 11-10
