@@ -45,7 +45,7 @@ CFLAGS = $(DISKMODEL_CFLAGS) $(LIBPARAM_CFLAGS) $(LIBDDBG_CFLAGS) $(DEBUG_OFLAGS
 FBSYSSIM_OFLAGS = -O6 -fomit-frame-pointer -fexpensive-optimizations -fschedule-insns2
 
 #CC = cc
-CC = gcc -Wall -Wno-unused -MD
+CC = gcc -Wall -Wno-unused -MD -DDEBUG
 # because purify spits out warnings on stdout...
 CC-DEP = gcc $(LIBPARAM_CFLAGS) $(DISKMODEL_CFLAGS)
 
