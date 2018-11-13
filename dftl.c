@@ -24,7 +24,7 @@
 #define AVE_ADD_N_VAR 2
 #define static_wear_threshold 20
 //阈值相关系数
-#define N_wear_var 3
+#define N_wear_var 4
 void Select_Wear_Level_Threshold(int Type);
 
 int Wear_Threshold_Type=AVE_ADD_N_VAR;
@@ -359,8 +359,9 @@ int opm_gc_run(int small, int mapdir_flag)
   for( q = 0; q < PAGE_NUM_PER_BLK; q++){
     if(nand_blk[victim_blk_no].page_status[q] == 1){ //map block
     // test debug print zhoujie
-	fprintf("map block gcc select blk no: %d\n",victim_blk_no);
-	
+#ifdef DEBUG
+		printf("map block gcc select blk no: %d\n",victim_blk_no);
+#endif
       for( q = 0; q  < 64; q++) {
         if(nand_blk[victim_blk_no].page_status[q] == 0 ){
           printf("something corrupted1=%d",victim_blk_no);
