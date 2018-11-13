@@ -551,16 +551,18 @@ double callFsim(unsigned int secno, int scount, int operation)
             
             pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
             real_arr[pos] = blkno;
-//          add zhoujie debug
-			debug_j=0;
-			for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
-				if(nand_ppn_2_lpn_in_CMT_arr[debug_i] == 1){
-					debug_j++;
+//          add zhoujie cycle debug
+			if(rqst_cnt%10000 == 0){
+				debug_j=0;
+				for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
+					if(nand_ppn_2_lpn_in_CMT_arr[debug_i] == 1){
+						debug_j++;
+					}
 				}
-			}
-			if(debug_j > MAP_REAL_MAX_ENTRIES+MAP_GHOST_MAX_ENTRIES){
-				printf("nand_ppn_2_lpn_in_CMT_arr set 1 num is %d\n",debug_j);
-				assert(0);
+				if(debug_j > MAP_REAL_MAX_ENTRIES+MAP_GHOST_MAX_ENTRIES){
+					printf("nand_ppn_2_lpn_in_CMT_arr set 1 num is %d\n",debug_j);
+					assert(0);
+				}
 			}
 
 			
