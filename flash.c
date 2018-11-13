@@ -623,7 +623,7 @@ void nand_erase (_u32 blk_no)
   free_blk_num++;
   // add zhoujie
   my_all_nand_ecn_counts++;
-  my_gloabl_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
+  my_global_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
 
   nand_stat(BLOCK_ERASE);
 }
