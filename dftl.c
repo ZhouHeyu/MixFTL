@@ -105,9 +105,11 @@ void opm_wear_level(int target_blk_no)
 	map_flag= -1;
 	for( q = 0; q < PAGE_NUM_PER_BLK; q++){
 		if(nand_blk[wear_src_blk_no].page_status[q] == 1){ //map block
+#ifdef DEBUG
      	   // test debug print zhoujie
 	    	printf("wear level block gcc select Map blk no: %d\n",wear_src_blk_no);
-        	for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
+#endif
+			for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
 				if(nand_blk[wear_src_blk_no].page_status[q] == 0 ){
 					printf("something corrupted1=%d",wear_src_blk_no);
         		}
@@ -116,8 +118,11 @@ void opm_wear_level(int target_blk_no)
       		break;
     	} 
     	else if(nand_blk[wear_src_blk_no].page_status[q] == 0){ //data block
-    		printf("wear level block gcc select Data blk no: %d\n",wear_src_blk_no);
-      		for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
+#ifdef DEBUG
+		//test debug print zhoujie
+			printf("wear level block gcc select Data blk no: %d\n",wear_src_blk_no);
+#endif
+			for( q = 0; q  < PAGE_NUM_PER_BLK; q++) {
         		if(nand_blk[wear_src_blk_no].page_status[q] == 1 ){
           			printf("something corrupted2=%d",wear_src_blk_no);
         		}
@@ -486,7 +491,9 @@ int opm_gc_run(int small, int mapdir_flag)
 // add zhoujie 11-10 超过给定阈值开启 磨损均衡
 
    if(nand_blk[victim_blk_no].state.ec > (int)(my_global_nand_blk_wear_ave + my_wear_level_threshold)){
+#ifdef DEBUG
 	    printf("called opm wear level %d\n",++called_wear_num);
+#endif
 		opm_wear_level( victim_blk_no );
    }
 
