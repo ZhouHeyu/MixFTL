@@ -370,6 +370,7 @@ double callFsim(unsigned int secno, int scount, int operation)
 
   int pos=-1,pos_real=-1,pos_ghost=-1;
 
+  int debug_i,debug_j;
   if(ftl_type == 1){ }
 
   if(ftl_type == 3) {
@@ -501,7 +502,8 @@ double callFsim(unsigned int secno, int scount, int operation)
                   opagemap[min_ghost].update = 0;
                   send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);   // read from 2nd mapping table then update it
                   send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);   // write into 2nd mapping table  
-		
+//					add zhoujie 11-13
+				  nand_ppn_2_lpn_in_CMT_arr[opagemap[min_ghost].ppn]=0;
                 } 
                 opagemap[min_ghost].map_status = MAP_INVALID;
 
@@ -549,6 +551,19 @@ double callFsim(unsigned int secno, int scount, int operation)
             
             pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
             real_arr[pos] = blkno;
+//          add zhoujie debug
+			debug_j=0;
+			for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
+				if(nand_ppn_2_lpn_in_CMT_arr[debug_i] == 1){
+					debug_j++;
+				}
+			}
+			if(debug_j > MAP_REAL_MAX_ENTRIES+MAP_GHOST_MAX_ENTRIES){
+				printf("nand_ppn_2_lpn_in_CMT_arr set 1 num is %d\n",debug_j);
+				assert(0);
+			}
+
+			
           }
 
          //comment out the next line when using cache
