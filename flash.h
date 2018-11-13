@@ -113,6 +113,8 @@ _u32 free_blk_idx;
 _u32 stat_read_num, stat_write_num, stat_erase_num;
 _u32 stat_gc_read_num, stat_gc_write_num;
 _u32 stat_oob_read_num, stat_oob_write_num;
+
+
 _u32 min_fb_num;
 //zhoujie add 
 //自己定义的磨损均衡阈值偏差
@@ -120,6 +122,7 @@ double my_wear_level_threshold;
 extern double my_global_nand_blk_wear_ave;
 extern double my_global_nand_blk_wear_std;
 extern double my_global_nand_blk_wear_var;
+int called_wear_num;
 
 void nand_blk_ecn_ave_static();
 void nand_blk_ecn_std_var_static();

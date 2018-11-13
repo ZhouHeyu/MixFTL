@@ -44,9 +44,6 @@ static _u16 wear_src_page_no,wear_target_page_no;
 int stat_wear_gc_called_num;
 double total_wear_gc_overhead_time;
 
-//debug
-static int called_wear_num;
-
 extern int merge_switch_num;
 extern int merge_partial_num;
 extern int merge_full_num;
@@ -733,7 +730,6 @@ int opm_init(blk_t blk_num, blk_t extra_num)
   read_count = 0;
   save_count = 0;
   
-  // debug test 11-10 
   called_wear_num=0;
 
   //update 2nd mapping table

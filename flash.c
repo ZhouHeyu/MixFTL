@@ -106,6 +106,7 @@ void nand_stat_print(FILE *outFP)
 //  fprintf(outFP, " OOWRITE %8u\n", stat_oob_write_num);
   fprintf(outFP, " GC page read (#): %8u   ", stat_gc_read_num);
   fprintf(outFP, " GC page write (#): %8u\n", stat_gc_write_num);
+  fprintf(outFP, "Wear Level GC called Num (#): %d\n", called_wear_num);
   fprintf(outFP, "------------------------------------------------------------\n");
 }
 
