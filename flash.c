@@ -17,14 +17,13 @@
 #include "flash.h"
 #include "ssd_interface.h"
 
-_u32 nand_blk_num, min_fb_num;
+_u32 nand_blk_num;
 
 //zhoujie
 static _u32 last_blk_pc;
 static int Min_N_Prime,Liner_S,Liner_L;
 static int my_all_nand_ecn_counts;
 double my_gloabl_nand_blk_wear_ave;
-
 double my_global_no_free_nand_blk_wear_ave;
 
 static int my_min_nand_wear_ave=5;

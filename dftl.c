@@ -533,7 +533,7 @@ size_t opm_write(sect_t lsn, sect_t size, int mapdir_flag)
     {
       int j = 0;
 
-      while (free_blk_num < 3 ){
+      while (free_blk_num < min_fb_num){
         j += opm_gc_run(small, mapdir_flag);
       }
       opm_gc_get_free_blk(small, mapdir_flag);
