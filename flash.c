@@ -624,6 +624,13 @@ void nand_erase (_u32 blk_no)
   // add zhoujie
   my_all_nand_ecn_counts++;
   my_global_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
+// add zhoujie 11-13
+  nand_blk_ecn_std_var_static();
+  printf("nand blk ecn ave:%lf\t nand blk ecn std:%lf\t nand blk var:%lf\n",
+  												my_global_nand_blk_wear_ave,
+  												my_global_nand_blk_wear_std,
+  												my_global_nand_blk_wear_var );
+
 
   nand_stat(BLOCK_ERASE);
 }
