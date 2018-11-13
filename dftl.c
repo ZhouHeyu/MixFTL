@@ -499,6 +499,7 @@ int opm_gc_run(int small, int mapdir_flag)
 
   if(nand_blk[victim_blk_no].state.ec > (int)(my_global_nand_blk_wear_ave + my_wear_level_threshold)){
   		opm_wear_level( victim_blk_no );
+		called_wear_num++;
 #ifdef DEBUG
 		switch(Wear_Threshold_Type){
 				case STATIC_THRESHOLD: 
@@ -512,7 +513,7 @@ int opm_gc_run(int small, int mapdir_flag)
 					break;
 				default : assert(0);break;
 		}
-		printf("called opm wear level %d\n",++called_wear_num);
+		printf("called opm wear level %d\n",called_wear_num);
 #endif
 
    }
