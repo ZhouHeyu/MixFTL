@@ -27,10 +27,11 @@ double my_global_nand_blk_wear_ave;
 double my_global_nand_blk_wear_std;
 double my_global_nand_blk_wear_var;
 
+#ifdef DEBUG
 //zhoujie 11-13
 int debug_cycle1=1000;
 static int debug_count1;
-
+#endif
 
 double my_global_no_free_nand_blk_wear_ave;
 
@@ -361,12 +362,12 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   Liner_S=(int)blk_num*0.5;
   Liner_L=Liner_S;
   my_all_nand_ecn_counts=0;
-//debug value  
+  
+#ifdef DEBUG
   debug_count1=0;
-  
-//test print
   printf("blk_num is %d\tMinPrime is %d\n",blk_num,Min_N_Prime);
-  
+#endif
+
   last_blk_pc=0;
   
   nand_blk_num = blk_num;
@@ -631,7 +632,9 @@ void nand_erase (_u32 blk_no)
   // add zhoujie
   my_all_nand_ecn_counts++;
   my_global_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
-// add zhoujie 11-13
+
+#ifdef DEBUG
+	// add zhoujie 11-13
   debug_count1++;
   if(debug_count1 % debug_cycle1 == 0){
   	nand_blk_ecn_std_var_static();
@@ -640,6 +643,7 @@ void nand_erase (_u32 blk_no)
   												my_global_nand_blk_wear_std,
   												my_global_nand_blk_wear_var );
   }
+#endif
 
   nand_stat(BLOCK_ERASE);
 }
