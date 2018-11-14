@@ -25,6 +25,10 @@
 #define static_wear_threshold 20
 //阈值相关系数
 #define N_wear_var 4
+//动态阈值更新的周期
+#define Session_Cycle 1000
+double wear_beta=0.1;
+
 void Select_Wear_Level_Threshold(int Type);
 
 int Wear_Threshold_Type=STATIC_THRESHOLD;
@@ -496,7 +500,7 @@ int opm_gc_run(int small, int mapdir_flag)
   nand_erase(victim_blk_no);
 // add zhoujie 11-10 超过给定阈值开启 磨损均衡
   Select_Wear_Level_Threshold(Wear_Threshold_Type);
-/*
+
   if(nand_blk[victim_blk_no].state.ec > (int)(my_global_nand_blk_wear_ave + my_wear_level_threshold)){
   		opm_wear_level( victim_blk_no );
 		called_wear_num++;
@@ -517,7 +521,7 @@ int opm_gc_run(int small, int mapdir_flag)
 #endif
 
    }
-*/
+
 
   return (benefit + 1);
 }
@@ -528,16 +532,30 @@ int opm_gc_run(int small, int mapdir_flag)
 */
 void Select_Wear_Level_Threshold(int Type)
 {
+ double temp;
  switch(Type){
  	case STATIC_THRESHOLD: 
-		my_wear_level_threshold=static_wear_threshold;
+		my_wear_level_threshold = static_wear_threshold;
 		break;
 	case DYNAMIC_THRESHOLD:
-//		my_wear_level_threshold
+		if(rqst_cnt % Session_Cycle == 0 && called_wear_num != 0 ){
+			temp = (called_wear_num - last_called_wear_num) *1.0 / nand_blk_num;
+			my_wear_level_threshold = sqrt(100 / wear_beta) * sqrt(temp * my_wear_level_threshold);
+#ifdef DEBUG
+			printf("----------------------------------\n");
+			printf("curr rqst_cnt is %d\t,Session Cycle is %d\n",rqst_cnt,Session_Cycle);
+			printf("Session called wear num is %d\n",called_wear_num-last_called_wear_num);
+			printf("my_wear_level_threshold is %lf\n",my_wear_level_threshold);
+			printf("----------------------------------\n");
+			
+#endif
+		    last_called_wear_num = called_wear_num;
+		}
+
 		break;
 	case  AVE_ADD_N_VAR:
 		nand_blk_ecn_std_var_static();
-		my_wear_level_threshold=N_wear_var*my_global_nand_blk_wear_var;
+		my_wear_level_threshold = N_wear_var * my_global_nand_blk_wear_var;
 		break;
 	default : break;
  }
@@ -726,9 +744,10 @@ int opm_init(blk_t blk_num, blk_t extra_num)
   write_count =0;
   read_count = 0;
   save_count = 0;
-  
+// 相关参数的初始化
+  my_wear_level_threshold=10;
   called_wear_num=0;
-
+  last_called_wear_num=0;
   //update 2nd mapping table
   for(i = 0; i<mapdir_num; i++){
     ASSERT(MAP_ENTRIES_PER_PAGE == 512);

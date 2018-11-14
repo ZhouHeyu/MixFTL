@@ -123,7 +123,7 @@ extern double my_global_nand_blk_wear_ave;
 extern double my_global_nand_blk_wear_std;
 extern double my_global_nand_blk_wear_var;
 int called_wear_num;
-
+int last_called_wear_num;
 void nand_blk_ecn_ave_static();
 void nand_blk_ecn_std_var_static();
 
