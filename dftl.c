@@ -97,8 +97,10 @@ void opm_wear_level(int target_blk_no)
 	int valid_flag,pos;
 	_u32 copy_lsn[SECT_NUM_PER_PAGE], copy[SECT_NUM_PER_PAGE];
 	_u16 valid_sect_num,  l, s;
-
 	_u32 old_ppn,new_ppn;
+
+	sect_t s_lsn;	// starting logical sector number
+    sect_t s_psn; // starting physical sector number 
 	
 	//确定选择交换的冷块数据
 //	wear_src_blk_no=find_switch_cold_blk_method1(target_blk_no);
@@ -155,6 +157,7 @@ void opm_wear_level(int target_blk_no)
  		//首先模拟块读 
 		//读取整个物理块，按页一个个读取
 		valid_flag = nand_oob_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE));
+//      有效数据填入		
    		if(valid_flag == 1)
    		{
 	   		valid_sect_num = nand_page_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE), copy, 1);
@@ -201,10 +204,29 @@ void opm_wear_level(int target_blk_no)
 			 		pos++;
 		   		} 
 			}
+   		}else{
+   			//无效数据也填入，避免出现fpc不为0的块无法回收
+   			nand_page_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE), copy, 1);
+//			便于后面的页面无效化		
+			s_psn = SECTOR(wear_target_blk_no, wear_target_page_no);
+			s_lsn=copy_lsn[0];
+//			先写入无效数据		
+	   		for (j = 0,k=0; j < SECT_NUM_PER_PAGE; j++) {
+		 		copy_lsn[k] = copy[j];
+		 		k++;
+	   		}
+			nand_page_write(SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT), copy_lsn, 1, 1);
+			wear_target_page_no+= SECT_NUM_PER_PAGE;
+//			之后把页面无效化
+			for(k = 0; k<SECT_NUM_PER_PAGE; k++){
+      			nand_invalidate(s_psn + i, s_lsn + i);
+    		} 
    		}
  	}//end-for
 	if(nand_blk[wear_target_blk_no].fpc !=0 ){
-		printf("%d 块没有写满\n",wear_target_blk_no);
+#ifdef DEBUG
+		printf("nand blk %d is not write full\n",wear_target_blk_no);
+#endif 
 	}
 
 	
