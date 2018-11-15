@@ -31,7 +31,7 @@ double wear_beta=0.1;
 
 void Select_Wear_Level_Threshold(int Type);
 
-int Wear_Threshold_Type=STATIC_THRESHOLD;
+int Wear_Threshold_Type=DYNAMIC_THRESHOLD;
 
 
 _u32 opm_gc_cost_benefit();
