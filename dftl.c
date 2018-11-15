@@ -538,7 +538,8 @@ void Select_Wear_Level_Threshold(int Type)
 		my_wear_level_threshold = static_wear_threshold;
 		break;
 	case DYNAMIC_THRESHOLD:
-		if(rqst_cnt % Session_Cycle == 0 && called_wear_num != 0 ){
+//  注意这里的循环周期计数值选取 11-15		
+		if(stat_erase_num % Session_Cycle == 0 && called_wear_num != 0 ){
 			temp = (called_wear_num - last_called_wear_num) *1.0 / nand_blk_num;
 			my_wear_level_threshold = sqrt(100 / wear_beta) * sqrt(temp * my_wear_level_threshold);
 #ifdef DEBUG
