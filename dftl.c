@@ -206,15 +206,10 @@ void opm_wear_level(int target_blk_no)
 			}
    		}else{
    			//无效数据也填入，避免出现fpc不为0的块无法回收
-   			nand_page_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE), copy, 1);
+   			s_lsn=nand_blk[wear_src_blk_no].sect[i*SECT_NUM_PER_PAGE].lsn;
 //			便于后面的页面无效化		
 			s_psn = SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT);
 //			先写入无效数据		
-	   		for (j = 0,k=0; j < SECT_NUM_PER_PAGE; j++) {
-		 		copy_lsn[k] = copy[j];
-		 		k++;
-	   		}
-			s_lsn=copy_lsn[0];
 			if(nand_blk[wear_src_blk_no].page_status[i] == 1){
 				nand_page_write(SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT), copy_lsn, 1, 2);
 			}
