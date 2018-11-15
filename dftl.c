@@ -203,6 +203,11 @@ void opm_wear_level(int target_blk_no)
 			}
    		}
  	}//end-for
+	if(PAGE_NUM_PER_BLK-wear_target_page_no>0){
+		printf("%d 块没有写满\n",wear_target_blk_no);
+	}
+
+	
 //	处理后续的数据页翻译项的更新
 	for(i=0;i < PAGE_NUM_PER_BLK;i++) {
 		temp_arr[i]=-1;

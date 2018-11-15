@@ -308,13 +308,13 @@ _u32 find_switch_cold_blk_method2(int victim_blk_no)
 			last_blk_pc = 0;
 
 		if (my_global_nand_blk_wear_ave < my_min_nand_wear_ave && nand_blk[last_blk_pc].fpc ==0 
-				&& nand_blk[last_blk_pc].state.free == 0 && nand_blk[last_blk_pc].ipc == 0){
+				&& nand_blk[last_blk_pc].state.free == 0){
 				break;
 		}
 		
 		if( nand_blk[last_blk_pc].state.ec < (my_global_nand_blk_wear_ave+my_min_nand_wear_ave)
 			&& nand_blk_bit_map[last_blk_pc] == min_bitmap_value 
-			&& nand_blk[last_blk_pc].state.free ==0 && nand_blk[last_blk_pc].fpc ==0 && nand_blk[last_blk_pc].ipc ==0 ) {
+			&& nand_blk[last_blk_pc].state.free ==0 && nand_blk[last_blk_pc].fpc ==0 ) {
 			break;
 		}
 		
