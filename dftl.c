@@ -544,7 +544,7 @@ void Select_Wear_Level_Threshold(int Type)
 			my_wear_level_threshold = sqrt(100 / wear_beta) * sqrt(temp * my_wear_level_threshold);
 #ifdef DEBUG
 			printf("----------------------------------\n");
-			printf("curr rqst_cnt is %d\t,Session Cycle is %d\n",rqst_cnt,Session_Cycle);
+			printf("curr stat_erase_num is %d\t,Session Cycle is %d\n",stat_erase_num,Session_Cycle);
 			printf("Session called wear num is %d\n",called_wear_num-last_called_wear_num);
 			printf("my_wear_level_threshold is %lf\n",my_wear_level_threshold);
 			printf("----------------------------------\n");
