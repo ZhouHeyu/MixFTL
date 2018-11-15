@@ -203,7 +203,7 @@ void opm_wear_level(int target_blk_no)
 			}
    		}
  	}//end-for
-	if(PAGE_NUM_PER_BLK-wear_target_page_no>0){
+	if(nand_blk[wear_target_blk_no].fpc !=0 ){
 		printf("%d ¿éÃ»ÓĞĞ´Âú\n",wear_target_blk_no);
 	}
 
