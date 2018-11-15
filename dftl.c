@@ -219,7 +219,7 @@ void opm_wear_level(int target_blk_no)
 			wear_target_page_no+= SECT_NUM_PER_PAGE;
 //			之后把页面无效化
 			for(k = 0; k<SECT_NUM_PER_PAGE; k++){
-      			nand_invalidate(s_psn + i, s_lsn + i);
+      			nand_invalidate(s_psn + k, s_lsn + k);
     		} 
    		}
  	}//end-for
