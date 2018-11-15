@@ -208,7 +208,7 @@ void opm_wear_level(int target_blk_no)
    			//无效数据也填入，避免出现fpc不为0的块无法回收
    			nand_page_read( SECTOR(wear_src_blk_no, i * SECT_NUM_PER_PAGE), copy, 1);
 //			便于后面的页面无效化		
-			s_psn = SECTOR(wear_target_blk_no, wear_target_page_no);
+			s_psn = SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT);
 			s_lsn=copy_lsn[0];
 //			先写入无效数据		
 	   		for (j = 0,k=0; j < SECT_NUM_PER_PAGE; j++) {

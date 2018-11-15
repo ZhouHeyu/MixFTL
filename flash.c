@@ -673,6 +673,8 @@ void nand_invalidate (_u32 psn, _u32 lsn)
 
 }
 
+
+
 _u32 nand_get_free_blk (int isGC) 
 {
   _u32 blk_no = -1, i;
