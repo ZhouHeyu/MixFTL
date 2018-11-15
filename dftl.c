@@ -206,7 +206,10 @@ void opm_wear_level(int target_blk_no)
 			}
    		}else{
    			//无效数据也填入，避免出现fpc不为0的块无法回收
-   			s_lsn=nand_blk[wear_src_blk_no].sect[i*SECT_NUM_PER_PAGE].lsn;
+   			s_lsn = nand_blk[wear_src_blk_no].sect[i*SECT_NUM_PER_PAGE].lsn;
+			for(k = 0 ; k < SECT_NUM_PER_PAGE ; k++){
+				copy_lsn[k] = s_lsn+k ;
+			}
 //			便于后面的页面无效化		
 			s_psn = SECTOR(wear_target_blk_no, wear_target_page_no) & (~OFF_MASK_SECT);
 //			先写入无效数据		
