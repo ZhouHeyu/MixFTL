@@ -73,9 +73,10 @@ _u32 SW_Level_Find_GC_blk_no()
 			if( SW_level_Findex >= SW_level_BET_Size){
 				SW_level_Findex = 0;
 			}
+			SW_level_Findex ++ ;
 			if( SW_level_BET_arr[SW_level_Findex] == 0){
 				break;
-			}	
+			}
 		}//第一层循环找到对应的bit位K个块集合
 		//遍历K个块级中的ECN最小块选取
 		blk_s = SW_level_Findex * ( 2 ^ SW_level_K);
