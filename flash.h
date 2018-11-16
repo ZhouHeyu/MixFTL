@@ -141,6 +141,8 @@ int SW_level_Ecnt;
 int SW_level_Fcnt;
 int SW_level_Findex;
 int SW_level_reset_num;
+int SW_level_GC_called_num;
+
 void SW_Level_BET_Value_Reset();
 extern int SW_level_K;
 extern int SW_level_T;
