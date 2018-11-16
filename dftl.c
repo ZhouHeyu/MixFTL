@@ -33,8 +33,8 @@ int SW_level_flag = 1;
 int Wear_Threshold_Type=AVE_ADD_N_VAR;
 
 #ifdef DEBUG
-int debug_cycle1=1000;
-static int debug_count1;
+int debug_cycle2=1000;
+int debug_count2;
 #endif
 
 struct omap_dir *mapdir;
@@ -429,7 +429,7 @@ int opm_gc_run(int small, int mapdir_flag)
 
   if (SW_level_flag ){
 #ifdef DEBUG
-    if(debug_count1 % debug_cycle1 == 0){
+    if(debug_count2 % debug_cycle2 == 0){
   		printf("SW-BET-Size is %d\t SW-K:%d\t SW-T:%d\n",SW_level_BET_Size,
 												 	 			SW_level_K,
 												 	 			SW_level_T);
