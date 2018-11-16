@@ -375,7 +375,7 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
 #endif
 
   last_blk_pc=0;
-  
+  SW_level_reset_num=0;
   nand_blk_num = blk_num;
 // SW level磨损均衡相关变量值初始化
   SW_level_BET_Size=nand_blk_num / ( 2 ^ SW_level_K );
@@ -754,6 +754,7 @@ void SW_Level_BET_Value_Reset()
 	SW_level_Fcnt = 0;
 //  产生随机随机数	
 	SW_level_Findex = random(SW_level_BET_Size-1);
+	SW_level_reset_num ++;
 }
 
 
