@@ -336,7 +336,7 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
 {
   _u32 blk_no;
   int i;
-  int mod_num=0;
+  int mod_num=1;
 
   nand_end();
 
