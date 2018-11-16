@@ -31,7 +31,7 @@ double my_global_nand_blk_wear_var;
 //add zhoujie 11-16
 //SW 算法调整的两个参数
 int SW_level_K=3;
-int SW_level_T=100;
+int SW_level_T=5;
 
 
 #ifdef DEBUG
