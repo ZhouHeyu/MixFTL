@@ -647,18 +647,18 @@ void nand_erase (_u32 blk_no)
     nand_blk[blk_no].page_status[i] = -1;
   }
 
-  free_blk_num++;
+  free_blk_num ++;
   // add zhoujie
-  my_all_nand_ecn_counts++;
-  my_global_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
+  my_all_nand_ecn_counts ++;
+  my_global_nand_blk_wear_ave = my_all_nand_ecn_counts*1.0/nand_blk_num;
 
 //add zhoujie 11-16 SW_level
  if ( SW_level_BET_arr [ blk_no/(2^SW_level_K)] == 0 ){
 	SW_level_BET_arr [ blk_no/(2^SW_level_K)] = 1;
 	SW_level_Fcnt += 1;
  }
- SW_level_Ecnt ++;
-
+ SW_level_Ecnt++;
+/*
 #ifdef DEBUG
 	// add zhoujie 11-13
   debug_count1++;
@@ -670,7 +670,7 @@ void nand_erase (_u32 blk_no)
   												my_global_nand_blk_wear_var );
   }
 #endif
-
+*/
   nand_stat(BLOCK_ERASE);
 }
 

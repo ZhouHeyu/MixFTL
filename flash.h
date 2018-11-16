@@ -142,9 +142,6 @@ int SW_level_Fcnt;
 int SW_level_Findex;
 void SW_Level_BET_Value_Reset();
 
-
-
-
 #endif 
 //源码内部定义了磨损均衡度，但是没有使用?
 #define WEAR_LEVEL_THRESHOLD   35 
