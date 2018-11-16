@@ -28,6 +28,8 @@
 //动态阈值更新的周期
 #define Session_Cycle 1000
 double wear_beta=0.1;
+//开启SW_level算法的标志位
+int SW_level_flag = 1;
 
 void Select_Wear_Level_Threshold(int Type);
 
@@ -57,7 +59,7 @@ double total_gc_overhead_time;
 
 int map_pg_read=0;
 
-_u32 SW_Level_Find_GC_blk_no(int victim_blk_no)
+_u32 SW_Level_Find_GC_blk_no()
 {
 	int blk_s, blk_e, i;
 	int blk_cb, max_cb = 0;
@@ -407,13 +409,12 @@ int opm_gc_run(int small, int mapdir_flag)
   _u16 valid_sect_num,  l, s;
   _u32 old_ppn,new_ppn;
 
-  victim_blk_no = opm_gc_cost_benefit();
-
-// test debug print zhoujie
-/*  if(mapdir_flag==2){
-	fprintf("map block gcc select blk no: %d\n",victim_blk_no);
+  if( SW_level_flag && (SW_level_Ecnt / SW_level_Fcnt) > SW_level_T ){
+	victim_blk_no = SW_Level_Find_GC_blk_no();
+  }else{
+  	victim_blk_no = opm_gc_cost_benefit();
   }
-*/
+
 
   memset(copy_lsn, 0xFF, sizeof (copy_lsn));
 
@@ -568,7 +569,12 @@ int opm_gc_run(int small, int mapdir_flag)
   }
 
   nand_erase(victim_blk_no);
-// add zhoujie 11-10 超过给定阈值开启 磨损均衡
+
+  if (SW_level_flag == 1 ){
+  	//如果开启SW算法则无需进行后面的静态交换的磨损均衡
+	return (benefit + 1);
+  }
+ // add zhoujie 11-10 超过给定阈值开启 磨损均衡 
   Select_Wear_Level_Threshold(Wear_Threshold_Type);
 
   if(nand_blk[victim_blk_no].state.ec > (int)(my_global_nand_blk_wear_ave + my_wear_level_threshold)){

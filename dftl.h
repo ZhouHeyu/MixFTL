@@ -53,3 +53,6 @@ static int SYNC_NUM;
 
 sect_t opagemap_num;
 struct opm_entry *opagemap;
+//add zhoujie 11-16 找到对应的块进行GC
+SW_Level_Find_GC_blk_no();
+
