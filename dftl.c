@@ -1,4 +1,4 @@
-/* 
+   /* 
  * Contributors: Youngjae Kim (youkim@cse.psu.edu)
  *               Aayush Gupta (axg354@cse.psu.edu)
  * 
@@ -56,6 +56,46 @@ int stat_gc_called_num;
 double total_gc_overhead_time;
 
 int map_pg_read=0;
+
+_u32 SW_Level_Find_GC_blk_no(int victim_blk_no)
+{
+	int blk_s, blk_e, i;
+	int blk_cb, max_cb = 0;
+	int max_blk = -1;
+	if(SW_level_Fcnt >= SW_level_BET_Size){
+		SW_Level_BET_Value_Reset();
+	}
+	while(1){
+		while(1){
+			if( SW_level_Findex >= SW_level_BET_Size){
+				SW_level_Findex = 0;
+			}
+			if( SW_level_BET_arr[SW_level_Findex] == 0){
+				break;
+			}	
+		}//第一层循环找到对应的bit位K个块集合
+		//遍历K个块级中的ECN最小块选取
+		blk_s = SW_level_Findex * ( 2 ^ SW_level_K);
+		blk_e = (SW_level_Findex + 1) * ( 2 ^ SW_level_K );
+		for( i = blk_s; i < blk_e && i < nand_blk_num ; i++){
+			if( i == free_blk_no[0] || i == free_blk_no[1]){
+				continue;
+			}
+			blk_cb = nand_blk[i].ipc;
+			if ( blk_cb > max_cb){
+				max_cb = blk_cb;
+				max_blk = i;
+			}
+		}//end for
+		if ( max_blk != -1){
+			ASSERT(nand_blk[max_blk].ipc > 0);
+			break;
+		}
+	}
+	return max_blk;
+}
+
+
 
 _u32 opm_gc_cost_benefit()
 {

@@ -133,6 +133,16 @@ _u32 find_switch_cold_blk_method2(int victim_blkno);
 //添加辅助信息确定物理块的数据页的映射项是否存在于映射缓存中
 int * nand_ppn_2_lpn_in_CMT_arr;
 int * nand_pbn_2_lpn_in_CMT_arr;
+//add zhoujie 11-16
+//添加关于SW_level（2007年）算法的数据结构
+int * SW_level_BET_arr;
+int SW_level_BET_Size;
+int SW_level_Ecnt;
+int SW_level_Fcnt;
+int SW_level_Findex;
+void SW_Level_BET_Value_Reset();
+
+
 
 
 #endif 

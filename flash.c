@@ -17,6 +17,7 @@
 #include "flash.h"
 #include "ssd_interface.h"
 
+#define random(x) ( rand() % (x))
 _u32 nand_blk_num;
 
 //zhoujie
@@ -27,11 +28,19 @@ double my_global_nand_blk_wear_ave;
 double my_global_nand_blk_wear_std;
 double my_global_nand_blk_wear_var;
 
+//add zhoujie 11-16
+//SW 算法调整的两个参数
+int SW_level_K=3;
+int SW_level_T=100;
+
+
 #ifdef DEBUG
 //zhoujie 11-13
 int debug_cycle1=1000;
 static int debug_count1;
 #endif
+
+static int 
 
 double my_global_no_free_nand_blk_wear_ave;
 
@@ -356,7 +365,6 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   memset(nand_ppn_2_lpn_in_CMT_arr,0,sizeof(int) * blk_num * PAGE_NUM_PER_BLK);
   memset(nand_pbn_2_lpn_in_CMT_arr,0,sizeof(int) * blk_num );
 
-
 // 初始化磨损的差异阈值
   Min_N_Prime=FindMinPrime(blk_num);
   Liner_S=(int)blk_num*0.5;
@@ -371,6 +379,17 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   last_blk_pc=0;
   
   nand_blk_num = blk_num;
+// SW level磨损均衡相关变量值初始化
+  SW_level_BET_Size=nand_blk_num / ( 2 ^ SW_level_K );
+  if( nand_blk_num % ( 2 ^ SW_level_K ) != 0 ){
+		SW_level_BET_Size += 1;
+  }
+
+  SW_level_BET_arr = (int *) malloc( sizeof(int) * SW_level_BET_Size );
+  if (SW_level_BET_arr == NULL ){
+	return -1;
+  }
+  SW_Level_BET_Value_Reset();
 
   pb_size = 1;
   min_fb_num = min_free_blk_num;
@@ -633,6 +652,13 @@ void nand_erase (_u32 blk_no)
   my_all_nand_ecn_counts++;
   my_global_nand_blk_wear_ave=my_all_nand_ecn_counts*1.0/nand_blk_num;
 
+//add zhoujie 11-16 SW_level
+ if ( SW_level_BET_arr [ blk_no/(2^SW_level_K)] == 0 ){
+	SW_level_BET_arr [ blk_no/(2^SW_level_K)] = 1;
+	SW_level_Fcnt += 1;
+ }
+ SW_level_Ecnt ++;
+
 #ifdef DEBUG
 	// add zhoujie 11-13
   debug_count1++;
@@ -723,8 +749,14 @@ _u32 nand_get_free_blk (int isGC)
   return -1;
 }
 
-
-
+void SW_Level_BET_Value_Reset()
+{
+	memset(SW_level_BET_arr,0,sizeof(int) * SW_level_BET_Size );
+	SW_level_Ecnt = 0;
+	SW_level_Fcnt = 0;
+//  产生随机随机数	
+	SW_level_Findex = random(SW_level_BET_Size-1);
+}
 
 
 
