@@ -30,13 +30,8 @@
 double wear_beta=0.1;
 //开启SW_level算法的标志位
 int SW_level_flag = 1;
-
-void Select_Wear_Level_Threshold(int Type);
-
 int Wear_Threshold_Type=AVE_ADD_N_VAR;
 
-
-_u32 opm_gc_cost_benefit();
 
 struct omap_dir *mapdir;
 
