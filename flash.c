@@ -379,7 +379,7 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
 
   nand_blk_num = blk_num;
 // SW level磨损均衡相关变量值初始化
-  mod_num = mod_num < SW_level_K;
+  mod_num = mod_num << SW_level_K;
   printf("mod num is %d\n",mod_num);
   SW_level_BET_Size=nand_blk_num / mod_num;
   if( nand_blk_num % mod_num != 0 ){
