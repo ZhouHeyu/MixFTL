@@ -60,8 +60,9 @@ _u32 SW_Level_Find_GC_blk_no()
 	int blk_cb, max_cb = 0;
 	int max_blk = -1;
 	int mod_num;
-	mod_num = 1 << SW_level_K ;
 	int loop_count=0;
+	mod_num = 1 << SW_level_K ;
+
 #ifdef DEBUG
 	printf("SW-reset %d: SW-level-Fcnt is %d\t SW-level-Ecnt is %d\n",
 												   SW_level_reset_num,
