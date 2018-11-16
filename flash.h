@@ -141,6 +141,8 @@ int SW_level_Ecnt;
 int SW_level_Fcnt;
 int SW_level_Findex;
 void SW_Level_BET_Value_Reset();
+extern int SW_level_K;
+extern int SW_level_T;
 
 #endif 
 //源码内部定义了磨损均衡度，但是没有使用?
