@@ -404,8 +404,11 @@ int opm_gc_run(int small, int mapdir_flag)
   _u16 valid_sect_num,  l, s;
   _u32 old_ppn,new_ppn;
 
-  if( SW_level_flag && (SW_level_Ecnt / SW_level_Fcnt) > SW_level_T ){
+  if( SW_level_flag && SW_level_Fcnt !=0 &&
+  	 (SW_level_Ecnt / SW_level_Fcnt) > SW_level_T ){
+
 	victim_blk_no = SW_Level_Find_GC_blk_no();
+	
   }else{
   	victim_blk_no = opm_gc_cost_benefit();
   }
