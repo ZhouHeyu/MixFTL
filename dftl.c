@@ -66,13 +66,7 @@ _u32 SW_Level_Find_GC_blk_no()
 	int mod_num;
 	int loop_count=0;
 	mod_num = 1 << SW_level_K ;
-
-#ifdef DEBUG
-	printf("SW-reset %d: SW-level-Fcnt is %d\t SW-level-Ecnt is %d\n",
-												   SW_level_reset_num,
-														SW_level_Fcnt,
-														SW_level_Ecnt);
-#endif
+	
 	if(SW_level_Fcnt >= SW_level_BET_Size ){
 		SW_Level_BET_Value_Reset();
 	}
