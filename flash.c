@@ -40,8 +40,6 @@ int debug_cycle1=1000;
 static int debug_count1;
 #endif
 
-static int 
-
 double my_global_no_free_nand_blk_wear_ave;
 
 static int my_min_nand_wear_ave=1;
@@ -658,7 +656,7 @@ void nand_erase (_u32 blk_no)
 	SW_level_Fcnt += 1;
  }
  SW_level_Ecnt++;
-/*
+
 #ifdef DEBUG
 	// add zhoujie 11-13
   debug_count1++;
@@ -670,7 +668,7 @@ void nand_erase (_u32 blk_no)
   												my_global_nand_blk_wear_var );
   }
 #endif
-*/
+
   nand_stat(BLOCK_ERASE);
 }
 
