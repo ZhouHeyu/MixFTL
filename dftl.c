@@ -32,6 +32,10 @@ double wear_beta=0.1;
 int SW_level_flag = 1;
 int Wear_Threshold_Type=AVE_ADD_N_VAR;
 
+#ifdef DEBUG
+int debug_cycle1=1000;
+static int debug_count1;
+#endif
 
 struct omap_dir *mapdir;
 
