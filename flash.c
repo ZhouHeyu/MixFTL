@@ -392,7 +392,8 @@ int nand_init (_u32 blk_num, _u8 min_free_blk_num)
   }
   
   SW_Level_BET_Value_Reset();
-  SW_level_reset_num=0;
+  SW_level_reset_num = 0;
+  SW_level_GC_called_num = 0;
 
   pb_size = 1;
   min_fb_num = min_free_blk_num;

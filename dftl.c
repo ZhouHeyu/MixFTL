@@ -61,13 +61,14 @@ _u32 SW_Level_Find_GC_blk_no()
 	int max_blk = -1;
 	int mod_num;
 	mod_num = 1 << SW_level_K ;
+	int loop_count=0;
 #ifdef DEBUG
 	printf("SW-reset %d: SW-level-Fcnt is %d\t SW-level-Ecnt is %d\n",
 												   SW_level_reset_num,
 														SW_level_Fcnt,
 														SW_level_Ecnt);
 #endif
-	if(SW_level_Fcnt >= SW_level_BET_Size){
+	if(SW_level_Fcnt >= SW_level_BET_Size ){
 		SW_Level_BET_Value_Reset();
 	}
 	while(1){
@@ -97,6 +98,13 @@ _u32 SW_Level_Find_GC_blk_no()
 			ASSERT(nand_blk[max_blk].ipc > 0);
 			break;
 		}
+#ifdef DEBUG
+		loop_count++;
+		if(loop_count > 3){
+		  printf("loop count is %d\t reset\n",loop_count);
+		  SW_Level_BET_Value_Reset();
+		}
+#endif 
 	}
 	return max_blk;
 }
@@ -416,13 +424,15 @@ int opm_gc_run(int small, int mapdir_flag)
 
   if (SW_level_flag ){
 #ifdef DEBUG
-  	printf("SW-BET-Size is %d\t SW-K:%d\t SW-T:%d\n",SW_level_BET_Size,
-												 	 SW_level_K,
-												 	 SW_level_T);
-	printf("SW-reset %d: SW-level-Fcnt is %d\t SW-level-Ecnt is %d\n",
-												   SW_level_reset_num,
-														SW_level_Fcnt,
-														SW_level_Ecnt);
+    if(debug_count1 % debug_cycle1 == 0){
+  		printf("SW-BET-Size is %d\t SW-K:%d\t SW-T:%d\n",SW_level_BET_Size,
+												 	 			SW_level_K,
+												 	 			SW_level_T);
+		printf("SW-reset num is %d\t SW-gc-called-num is %d\n",SW_level_reset_num,
+																SW_level_GC_called_num);
+		printf("SW-level-Fcnt is %d\t SW-level-Ecnt is %d\n",SW_level_Fcnt,
+															 SW_level_Ecnt);
+    }
 #endif
 	if(SW_level_Fcnt >= SW_level_BET_Size){
 		SW_Level_BET_Value_Reset();
@@ -432,8 +442,8 @@ int opm_gc_run(int small, int mapdir_flag)
 
   if( SW_level_flag && SW_level_Fcnt !=0 &&
   	 (SW_level_Ecnt / SW_level_Fcnt) > SW_level_T ){
-
 	victim_blk_no = SW_Level_Find_GC_blk_no();
+	SW_level_GC_called_num ++;
 	
   }else{
   	victim_blk_no = opm_gc_cost_benefit();
