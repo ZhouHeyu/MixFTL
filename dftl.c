@@ -410,8 +410,9 @@ int opm_gc_run(int small, int mapdir_flag)
   _u16 valid_sect_num,  l, s;
   _u32 old_ppn,new_ppn;
 
-#ifdef DEBUG
+
   if (SW_level_flag ){
+#ifdef DEBUG
   	printf("SW-BET-Size is %d\t SW-K:%d\t SW-T:%d\n",SW_level_BET_Size,
 												 	 SW_level_K,
 												 	 SW_level_T);
@@ -419,8 +420,12 @@ int opm_gc_run(int small, int mapdir_flag)
 												   SW_level_reset_num,
 														SW_level_Fcnt,
 														SW_level_Ecnt);
+#endif
+	if(SW_level_Fcnt >= SW_level_BET_Size){
+		SW_Level_BET_Value_Reset();
+	}
   }
-#endif 
+
 
   if( SW_level_flag && SW_level_Fcnt !=0 &&
   	 (SW_level_Ecnt / SW_level_Fcnt) > SW_level_T ){
