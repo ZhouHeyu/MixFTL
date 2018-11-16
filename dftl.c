@@ -59,6 +59,8 @@ _u32 SW_Level_Find_GC_blk_no()
 	int blk_s, blk_e, i;
 	int blk_cb, max_cb = 0;
 	int max_blk = -1;
+	int mod_num;
+	mod_num = 1 << SW_level_K ;
 #ifdef DEBUG
 	printf("SW-reset %d: SW-level-Fcnt is %d\t SW-level-Ecnt is %d\n",
 												   SW_level_reset_num,
@@ -79,8 +81,8 @@ _u32 SW_Level_Find_GC_blk_no()
 			}
 		}//第一层循环找到对应的bit位K个块集合
 		//遍历K个块级中的ECN最小块选取
-		blk_s = SW_level_Findex * ( 2 ^ SW_level_K);
-		blk_e = (SW_level_Findex + 1) * ( 2 ^ SW_level_K );
+		blk_s = SW_level_Findex * mod_num;
+		blk_e = (SW_level_Findex + 1) * mod_num;
 		for( i = blk_s; i < blk_e && i < nand_blk_num ; i++){
 			if( i == free_blk_no[0] || i == free_blk_no[1]){
 				continue;

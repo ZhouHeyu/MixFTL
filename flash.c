@@ -623,7 +623,8 @@ _u8 nand_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag)
 void nand_erase (_u32 blk_no)
 {
   int i;
-
+  int mod_num;
+  mod_num = 1 << SW_level_K ;
   ASSERT(blk_no < nand_blk_num);
 
   ASSERT(nand_blk[blk_no].fpc <= SECT_NUM_PER_BLK);
@@ -656,8 +657,8 @@ void nand_erase (_u32 blk_no)
   my_global_nand_blk_wear_ave = my_all_nand_ecn_counts*1.0/nand_blk_num;
 
 //add zhoujie 11-16 SW_level
- if ( SW_level_BET_arr [ blk_no/(2^SW_level_K)] == 0 ){
-	SW_level_BET_arr [ blk_no/(2^SW_level_K)] = 1;
+ if ( SW_level_BET_arr [ blk_no/mod_num] == 0 ){
+	SW_level_BET_arr [ blk_no/mod_num] = 1;
 	SW_level_Fcnt += 1;
  }
  SW_level_Ecnt++;
