@@ -61,8 +61,8 @@ int map_pg_read=0;
 _u32 SW_Level_Find_GC_blk_no()
 {
 	int blk_s, blk_e, i;
-	int blk_cb, max_cb = 0;
-	int max_blk = -1;
+	int blk_ecn, min_ecn = 0;
+	int min_blk = 9999999999;
 	int mod_num;
 	int loop_count=0;
 	mod_num = 1 << SW_level_K ;
@@ -87,14 +87,18 @@ _u32 SW_Level_Find_GC_blk_no()
 			if( i == free_blk_no[0] || i == free_blk_no[1]){
 				continue;
 			}
-			blk_cb = nand_blk[i].ipc;
-			if ( blk_cb > max_cb){
-				max_cb = blk_cb;
-				max_blk = i;
+			blk_ecn = nand_blk[i].state.ec;
+			if (blk_ecn >= 9999999999 ){
+				printf("nand blk [i] ecn is over limit\n",i);
+				assert(0);
+			}
+			if ( blk_ecn < min_ecn){
+				min_ecn = blk_ecn;
+				min_blk = i;
 			}
 		}//end for
-		if ( max_blk != -1){
-			ASSERT(nand_blk[max_blk].ipc > 0);
+		if ( min_blk != -1){
+//			ASSERT(nand_blk[min_blk].ipc > 0);
 			break;
 		}
 #ifdef DEBUG
@@ -105,7 +109,7 @@ _u32 SW_Level_Find_GC_blk_no()
 		}
 #endif 
 	}
-	return max_blk;
+	return min_blk;
 }
 
 
