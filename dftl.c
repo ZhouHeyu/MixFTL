@@ -61,8 +61,8 @@ int map_pg_read=0;
 _u32 SW_Level_Find_GC_blk_no()
 {
 	int blk_s, blk_e, i;
-	int blk_ecn, min_ecn = 0;
-	int min_blk = 9999999999;
+	int blk_ecn, min_ecn = 9999999999;
+	int min_blk = -1;
 	int mod_num;
 	int loop_count=0;
 	mod_num = 1 << SW_level_K ;
