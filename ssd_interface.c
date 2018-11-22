@@ -603,3 +603,124 @@ double callFsim(unsigned int secno, int scount, int operation)
   return delay;
 }
 
+
+/***********************Mix SSD Function****************************/
+void reset_SLC_flash_stat()
+{
+  SLC_flash_read_num  =0;
+  SLC_flash_write_num  =0;
+  SLC_flash_gc_read_num  = 0;
+  SLC_flash_gc_write_num  = 0; 
+  SLC_flash_erase_num  =0;
+  SLC_flash_oob_read_num  =0;
+  SLC_flash_oob_write_num  =0; 
+}
+
+void reset_MLC_flash_stat()
+{
+  MLC_flash_read_num =0;
+  MLC_flash_write_num =0;
+  MLC_flash_gc_read_num = 0;
+  MLC_flash_gc_write_num = 0; 
+  MLC_flash_erase_num =0;
+  MLC_flash_oob_read_num =0;
+  MLC_flash_oob_write_num =0; 
+}
+
+
+double calculate_delay_SLC_flash()
+{
+  double delay;
+  double read_delay, write_delay;
+  double erase_delay;
+  double gc_read_delay, gc_write_delay;
+  double oob_write_delay, oob_read_delay;
+
+  oob_read_delay  = (double)SLC_OOB_READ_DELAY  * SLC_flash_oob_read_num;
+  oob_write_delay = (double)SLC_OOB_WRITE_DELAY * SLC_flash_oob_write_num;
+
+  read_delay     = (double)SLC_READ_DELAY  * SLC_flash_read_num; 
+  write_delay    = (double)SLC_WRITE_DELAY * SLC_flash_write_num; 
+  erase_delay    = (double)SLC_ERASE_DELAY * SLC_flash_erase_num; 
+
+  gc_read_delay  = (double)SLC_GC_READ_DELAY  * SLC_flash_gc_read_num; 
+  gc_write_delay = (double)SLC_GC_WRITE_DELAY * SLC_flash_gc_write_num; 
+
+
+  delay = read_delay + write_delay + erase_delay + gc_read_delay + gc_write_delay + 
+    oob_read_delay + oob_write_delay;
+
+  if( SLC_flash_gc_read_num > 0 || SLC_flash_gc_write_num > 0 || SLC_flash_erase_num > 0 ) {
+    gc_ti += delay;
+  }
+  else {
+    gc_di += delay;
+  }
+
+  if(warm_done == 1){
+    	fprintf(fp_gc_timeseries, "%d\t%d\t%d\t%d\t%d\t%d\n", 
+      			req_count_num, merge_switch_num - old_merge_switch_num, 
+      			merge_partial_num - old_merge_partial_num, 
+      			merge_full_num - old_merge_full_num, 
+      			flash_gc_read_num,
+      			flash_erase_num);
+
+    old_merge_switch_num = merge_switch_num;
+    old_merge_partial_num = merge_partial_num;
+    old_merge_full_num = merge_full_num;
+    req_count_num++;
+  }
+
+  reset_SLC_flash_stat();
+
+  return delay;
+}
+
+double calculate_delay_MLC_flash()
+{
+  double delay;
+  double read_delay, write_delay;
+  double erase_delay;
+  double gc_read_delay, gc_write_delay;
+  double oob_write_delay, oob_read_delay;
+
+  oob_read_delay  = (double)MLC_OOB_READ_DELAY  * MLC_flash_oob_read_num;
+  oob_write_delay = (double)MLC_OOB_WRITE_DELAY * MLC_flash_oob_write_num;
+
+  read_delay     = (double)MLC_READ_DELAY  * MLC_flash_read_num; 
+  write_delay    = (double)MLC_WRITE_DELAY * MLC_flash_write_num; 
+  erase_delay    = (double)MLC_ERASE_DELAY * MLC_flash_erase_num; 
+
+  gc_read_delay  = (double)MLC_GC_READ_DELAY  * MLC_flash_gc_read_num; 
+  gc_write_delay = (double)MLC_GC_WRITE_DELAY * MLC_flash_gc_write_num; 
+
+
+  delay = read_delay + write_delay + erase_delay + gc_read_delay + gc_write_delay + 
+    oob_read_delay + oob_write_delay;
+
+  if( MLC_flash_gc_read_num > 0 || MLC_flash_gc_write_num > 0 || MLC_flash_erase_num > 0 ) {
+    gc_ti += delay;
+  }
+  else {
+    gc_di += delay;
+  }
+
+  if(warm_done == 1){
+    fprintf(fp_gc_timeseries, "%d\t%d\t%d\t%d\t%d\t%d\n", 
+      req_count_num, merge_switch_num - old_merge_switch_num, 
+      merge_partial_num - old_merge_partial_num, 
+      merge_full_num - old_merge_full_num, 
+      flash_gc_read_num,
+      flash_erase_num);
+
+    old_merge_switch_num = merge_switch_num;
+    old_merge_partial_num = merge_partial_num;
+    old_merge_full_num = merge_full_num;
+    req_count_num++;
+  }
+
+  reset_MLC_flash_stat();
+
+  return delay;
+}
+
