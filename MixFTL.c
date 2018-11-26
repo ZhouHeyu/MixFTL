@@ -781,7 +781,7 @@ int SLC_data_gc_run(int victim_blk_no,int mapdir_flag)
 		}
 		
 		SLC_nand_page_read(temp_arr[i]*S_SECT_NUM_PER_PAGE, map_copy, 1);
-		map_lpn = (temp_arr1[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE);
+		map_lpn = (temp_arr1[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE;
 		
 		//invalid old map page
 		for(m = 0; m < S_SECT_NUM_PER_PAGE; m++){
@@ -933,7 +933,7 @@ int  MLC_gc_run(int small, int mapdir_flag)
 		}
 		
 		SLC_nand_page_read(temp_arr[i]*S_SECT_NUM_PER_PAGE, map_copy, 1);
-		map_lpn = (temp_arr1[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE);
+		map_lpn = (temp_arr1[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE;
 		
 		//invalid old map page
 	    for(m = 0; m < S_SECT_NUM_PER_PAGE; m++){
@@ -983,7 +983,7 @@ _u32 MLC_opm_gc_cost_benefit()
   _u32 max_blk = -1, i;
 
   for (i = 0; i < nand_MLC_blk_num; i++) {
-    if(i == free_MLC_blk_no[1]£©{
+    if(i == free_MLC_blk_no[1]){
       continue;
     }
 
