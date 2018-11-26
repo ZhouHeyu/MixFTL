@@ -979,6 +979,7 @@ void Mix_nand_stat_reset()
 */
 void Mix_nand_stat_print(FILE *outFP)
 {
+	int i;
 	fprintf(outFP, "\n");
 	fprintf(outFP, "MIX FLASH STATISTICS\n");
 	fprintf(outFP,"-----------------------------------------------------------\n");
@@ -1001,7 +1002,15 @@ void Mix_nand_stat_print(FILE *outFP)
 	fprintf(outFP, " SLC_to_SLC_num (#): %8u	 ", SLC_to_SLC_num);
 	fprintf(outFP, " SLC_to_MLC_num (#): %8u\n", SLC_to_MLC_num);
 	fprintf(outFP, "------------------------------------------------------------\n");
-
+	
+	fprintf(outFP, "-----------SLC inner Wear level static----------\n");
+	for(i=0; i < nand_SLC_blk_num;i++){
+		fprintf(outFP,"SLCNAND BLKNO%d ECN :%d\n",i,SLC_nand_blk[i].state.ec);
+	}
+	fprintf(outFP, "-----------MLC inner Wear level static----------\n");
+	for(i=0; i < nand_SLC_blk_num;i++){
+		fprintf(outFP,"MLCNAND BLKNO%d ECN :%d\n",i,SLC_nand_blk[i].state.ec);
+	}
 }
 
 

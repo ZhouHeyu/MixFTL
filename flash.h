@@ -133,6 +133,7 @@
 #define M_PAGE_NUM_PER_BLK  128
 #define M_SECT_NUM_PER_BLK  (M_SECT_NUM_PER_PAGE * M_PAGE_NUM_PER_BLK)
 
+#define UPN_SECT_BITS	  3
 #define M_SECT_BITS       3
 #define M_PAGE_BITS       7
 #define M_PAGE_SECT_BITS  10
@@ -154,6 +155,7 @@
 #define M_PAGE_NO_SECT(sect) (((sect) & M_PAGE_MASK_IN_SECT) >> M_SECT_BITS)
 #define M_SECT_NO_SECT(sect) ((sect) & M_SECT_MASK_IN_SECT)
 #define M_BLK_PAGE_NO_SECT(sect) ((sect) >> M_SECT_BITS)
+#define UPN_BLK_PAGE_NO_SECT(sect) ((sect) >> UPN_SECT_BITS)
 #define M_PAGE_SECT_NO_SECT(sect) ((sect) & M_PAGE_SECT_MASK_IN_SECT)
 #define M_BLK_NO_PAGE(page)  (((page) & M_BLK_MASK_IN_PAGE) >> M_PAGE_BITS)
 #define M_PAGE_NO_PAGE(page) ((page) & M_PAGE_MASK_IN_PAGE)

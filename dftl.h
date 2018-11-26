@@ -7,7 +7,7 @@
  * Description: This is a header file for dftl.c.  
  * 
  */
-
+#ifndef _DFTL_H_
 #include "type.h"
 
 #define MAP_INVALID 1 
@@ -49,6 +49,9 @@ int MAP_GHOST_NUM_ENTRIES;
 
 int CACHE_NUM_ENTRIES;
 
+
+
+
 static int SYNC_NUM;
 
 sect_t opagemap_num;
@@ -59,4 +62,4 @@ _u32 SW_Level_Find_GC_blk_no();
 void Select_Wear_Level_Threshold(int Type);
 extern int Wear_Threshold_Type;
 
-
+#endif
