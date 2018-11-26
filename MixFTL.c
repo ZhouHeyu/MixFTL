@@ -16,7 +16,7 @@
 #include "disksim_global.h"
 
 struct Momap_dir * Mix_4K_mapdir;
-int map_pg_read=0;
+int map_page_read=0;
 
 blk_t extra_blk_num;
 
@@ -175,7 +175,7 @@ void Mopm_end()
 }
 
 /************************************
-* Name : opagemap_reset()
+* Name : Mix_opagemap_reset()
 * Date : 2018-11-23 
 * author: zhoujie 
 * param: 
@@ -183,7 +183,7 @@ void Mopm_end()
 * Function :
 * Attention: 函数定义和dftl.c存在重合
 */
-void opagemap_reset()
+void Mix_opagemap_reset()
 {
   cache_hit = 0;
   flash_hit = 0;
@@ -192,7 +192,7 @@ void opagemap_reset()
   delay_flash_update = 0; 
   read_count =0;
   write_count=0;
-  map_pg_read=0;
+  map_page_read=0;
   save_count = 0;
 }
 
@@ -233,7 +233,7 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
   
   if (mapdir_flag == 2){
 //	翻译页的读取从SLC中读取,按2k对齐
-	map_pg_read ++ ;
+	map_page_read ++ ;
   	sect_num = (size < S_SECT_NUM_PER_PAGE) ? size : S_SECT_NUM_PER_PAGE;
 	s_psn = Mix_4K_mapdir[ulpn].ppn * S_SECT_NUM_PER_PAGE;
 	for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
