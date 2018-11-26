@@ -479,6 +479,7 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	}
 //	将旧的数据标记为无效
 	if(Mix_4K_opagemap[data_lpn].free == 0){
+		
 		if(Mix_4K_opagemap[data_lpn].IsSLC == 1){ //SLC
 			s_psn1 = Mix_4K_opagemap[data_lpn].ppn * S_SECT_NUM_PER_PAGE;
 			for(i=0; i < S_SECT_NUM_PER_PAGE*2 ; i++){
@@ -498,7 +499,6 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	}else{
 		Mix_4K_opagemap[data_lpn].free = 0;
 	}
-	//写入数据
 	Mix_4K_opagemap[data_lpn].ppn = M_PAGE_NO_SECT(s_psn);
 	Mix_4K_opagemap[data_lpn].IsSLC = 0;
 	free_MLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
