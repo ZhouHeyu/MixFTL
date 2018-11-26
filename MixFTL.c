@@ -16,6 +16,8 @@
 #include "disksim_global.h"
 
 struct Momap_dir * Mix_4K_mapdir;
+int map_pg_read=0;
+
 blk_t extra_blk_num;
 
 // 1:data blk 0:translate blk
@@ -24,8 +26,38 @@ _u32 free_MLC_blk_no[2];
 _u16 free_SLC_page_no[2];
 _u16 free_MLC_page_no[2];
 
+int MLC_merge_full_num = 0;
+int MLC_merge_switch_num = 0;
+int MLC_merge_partial_num = 0;
+
+int SLC_merge_full_num = 0;
+int SLC_merge_switch_num = 0;
+int SLC_merge_partial_num = 0;
+
+
 //注意在callfsim上层函数的地址转化，lpn  (0-Mix_4K_mapdir_num *8)是归属于翻译页的编号
 _u32 system_4K_opagemap_num; // (map lpn to 4k) + (user 4k page)
+
+
+
+int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num );
+void Mopm_end();
+void opagemap_reset();
+size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag);
+size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag);
+size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag);
+size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag);
+
+
+int  SLC_gc_run(int small, int mapdir_flag);
+int SLC_data_gc_run(int victim_blk_no,int mapdir_flag);
+int SLC_map_gc_run(int victim_blk_no,int mapdir_flag);
+
+int  MLC_gc_run(int small, int mapdir_flag);
+_u32 SLC_opm_gc_cost_benefit();
+_u32 MLC_opm_gc_cost_benefit();
+int SLC_gc_get_free_blk(int small, int mapdir_flag);
+int MLC_gc_get_free_blk(int small, int mapdir_flag);
 
 
 /*
@@ -65,7 +97,7 @@ int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num )
   }
 
   memset(Mix_4K_opagemap, 0xFF, sizeof (struct Mopm_entry) * Mix_4K_opagemap_num);
-  memset(Mix_4K_mapdir, 0xFF, sizeof(struct * Momap_dir) * Mix_4K_mapdir_num);
+  memset(Mix_4K_mapdir, 0xFF, sizeof(struct  Momap_dir) * Mix_4K_mapdir_num);
 
   //zhoujie: 1st map table 
   TOTAL_MAP_ENTRIES = Mix_4K_opagemap_num;
@@ -609,11 +641,11 @@ int SLC_map_gc_run(int victim_blk_no,int mapdir_flag)
 	
 	//	统计合并次数
 	if(merge_count == 0 ) 
-	  merge_switch_num++;
+	  SLC_merge_switch_num++;
 	else if(merge_count > 0 && merge_count < S_PAGE_NUM_PER_BLK)
-	  merge_partial_num++;
+	  SLC_merge_partial_num++;
 	else if(merge_count == S_PAGE_NUM_PER_BLK)
-	  merge_full_num++;
+	  SLC_merge_full_num++;
 	else if(merge_count > S_PAGE_NUM_PER_BLK){
 	  printf("merge_count =%d PAGE_NUM_PER_BLK=%d",merge_count,S_PAGE_NUM_PER_BLK);
 	  ASSERT(0);
@@ -766,11 +798,11 @@ int SLC_data_gc_run(int victim_blk_no,int mapdir_flag)
 
 	//	统计合并次数
 	if(merge_count == 0 ) 
-	  merge_switch_num++;
+	  SLC_merge_switch_num++;
 	else if(merge_count > 0 && merge_count < S_PAGE_NUM_PER_BLK)
-	  merge_partial_num++;
+	  SLC_merge_partial_num++;
 	else if(merge_count == S_PAGE_NUM_PER_BLK)
-	  merge_full_num++;
+	  SLC_merge_full_num++;
 	else if(merge_count > S_PAGE_NUM_PER_BLK){
 	  printf("merge_count =%d PAGE_NUM_PER_BLK=%d",merge_count,S_PAGE_NUM_PER_BLK);
 	  ASSERT(0);
@@ -917,11 +949,11 @@ int  MLC_gc_run(int small, int mapdir_flag)
 	}
 //	统计合并次数
 	if(merge_count == 0 ) 
-	  merge_switch_num++;
+	  MLC_merge_switch_num++;
 	else if(merge_count > 0 && merge_count < M_PAGE_NUM_PER_BLK)
-	  merge_partial_num++;
+	  MLC_merge_partial_num++;
 	else if(merge_count == M_PAGE_NUM_PER_BLK)
-	  merge_full_num++;
+	  MLC_merge_full_num++;
 	else if(merge_count > M_PAGE_NUM_PER_BLK){
 	  printf("merge_count =%d PAGE_NUM_PER_BLK=%d",merge_count,M_PAGE_NUM_PER_BLK);
 	  ASSERT(0);
