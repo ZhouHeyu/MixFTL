@@ -290,7 +290,6 @@ size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	if(mapdir_flag <= 2 && mapdir_flag >= 1){ //write to SLC
 	  SLC_flag = 1;
 	}else if ( mapdir_flag == 1){//write to MLC
-	  small = 1;
 	  SLC_flag = 0;
 	}else{
 	  printf("something corrupted");
