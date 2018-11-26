@@ -264,6 +264,10 @@ void Mix_nand_end ();
 void Mix_nand_stat_reset();
 void Mix_nand_stat_print(FILE *outFP);
 
+_u8 SLC_nand_4K_data_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag);
+_u8 SLC_nand_4K_data_page_read(_u32 psn, _u32 *lsns, _u8 isGC);
+
+
 /*************Mix SSD add Function END*********************/
 
 _u32 free_SLC_blk_num;
