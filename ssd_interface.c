@@ -505,7 +505,7 @@ double DFTL_Scheme(unsigned int secno,int scount, int operation)
 	cnt = bcount;
 
 	while(cnt > 0){
-		cnt--
+		cnt--;
 		rqst_cnt++;
 		if((opagemap[blkno].map_status == MAP_REAL) || (opagemap[blkno].map_status == MAP_GHOST))
 		{
@@ -527,7 +527,7 @@ double DFTL_Scheme(unsigned int secno,int scount, int operation)
     	send_flash_request(blkno*4, 4, operation, 1); 
 		blkno++;
 		//add zhoujie cycle debug
-      	if(rqst_cnt%10000 == 0){
+      	if(rqst_cnt % 10000 == 0){
         	debug_j=0;
         	for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
           		if(nand_ppn_2_lpn_in_CMT_arr[debug_i] == 1){
