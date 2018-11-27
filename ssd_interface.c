@@ -173,7 +173,7 @@ void initFlash()
   total_extr_blk_num = total_blk_num - total_util_blk_num;        // total extra block number
 
   ASSERT(total_extr_blk_num != 0);
-// ������С��min blk num
+// min blk num
   if (nand_init(total_blk_num, 30) < 0) {
     EXIT(-4); 
   }
@@ -197,6 +197,55 @@ void initFlash()
   nand_stat_reset();
 }
 
+/********************
+* Name:Mix_initFlash
+* Date:2018-11-27
+* Author:zhoujie
+* param:void
+* return value:void
+* Function: To Init FTL function and value init
+* Attention:MLC size equal total_blk_num, SLC size is 1/4 MLC
+********/
+void Mix_initFlash()
+{
+	blk_t total_blk_num;
+	blk_t total_util_blk_num;
+	blk_t total_extr_blk_num;
+	blk_t SLC_total_blk_num, SLC_total_util_blk_num, SLC_total_extr_blk_num;
+	blk_t MLC_total_blk_num, MLC_total_util_blk_num, MLC_total_extr_blk_num;
+
+	// total number of sectors    
+  	total_util_sect_num  = flash_numblocks;
+  	total_extra_sect_num = flash_extrblocks;
+  	total_sect_num = total_util_sect_num + total_extra_sect_num; 
+
+  	// total number of blocks 
+  	total_blk_num      = total_sect_num / SECT_NUM_PER_BLK;     // total block number
+  	total_util_blk_num = total_util_sect_num / SECT_NUM_PER_BLK;    // total unique block number
+  	global_total_blk_num = total_util_blk_num;
+  	total_extr_blk_num = total_blk_num - total_util_blk_num;        // total extra block number
+	ASSERT(total_extr_blk_num != 0);
+
+	SLC_total_blk_num = total_sect_num /(S_SECT_NUM_PER_BLK*4);
+	SLC_total_util_blk_num = total_util_sect_num/(S_SECT_NUM_PER_BLK*4);
+	SLC_total_extr_blk_num = SLC_total_blk_num - SLC_total_util_blk_num;    
+	
+	MLC_total_blk_num = total_sect_num /(M_SECT_NUM_PER_BLK);
+	MLC_total_util_blk_num = total_util_sect_num/(M_SECT_NUM_PER_BLK);
+	MLC_total_extr_blk_num = SLC_total_blk_num - SLC_total_util_blk_num;  
+
+	ASSERT(total_extr_blk_num != 0);
+	// min blk num
+	if (Mix_nand_init(SLC_total_blk_num, MLC_total_blk_num,30) < 0) {
+		EXIT(-4); 
+	}
+
+	ftl_op = Mopm_setup();
+	ftl_op->init(SLC_total_util_blk_num,MLC_total_util_blk_num);
+	
+}
+
+
 void printWearout()
 {
   int i;
@@ -214,7 +263,6 @@ void printWearout()
 void endFlash()
 {
   nand_stat_print(outputfile);
-  //zj-������������Ĳ�������
   nand_ecn_print(outputfile);
   ftl_op->end;
   nand_end();

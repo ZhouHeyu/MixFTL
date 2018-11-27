@@ -71,7 +71,7 @@ int MLC_gc_get_free_blk(int small, int mapdir_flag);
 * Attention : all Mix_opage_map based on 4K page size
 *			  MLC and SLC map entry all in SLC 
 ***********************************************/
-int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num )
+int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num)
 {
   int i;
   
@@ -111,7 +111,7 @@ int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num )
 	Mix_4K_opagemap[i].IsSLC = -1; 
   }
   
-  extra_blk_num = extra_num;
+//  extra_blk_num = extra_num;
 //sure free data blk  
   free_SLC_blk_no[1] = SLC_nand_get_free_blk(0);
   free_SLC_page_no[1] = 0;

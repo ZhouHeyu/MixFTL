@@ -74,6 +74,10 @@ void reset_flash_stat();
 double calculate_delay_flash();
 void initFlash();
 void endFlash();
+//add zhoujie 11-27
+void Mix_initFlash();
+void Mix_endFlash();
+
 void printWearout();
 void send_flash_request(int start_blk_no, int block_cnt, int operation, int mapdir_flag);
 void find_real_max();

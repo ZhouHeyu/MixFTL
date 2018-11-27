@@ -478,6 +478,15 @@ int ftl_type;
 int total_sect_num;
 int total_util_sect_num; 
 int total_extra_sect_num;
+//add zhoujie 11-27
+int SLC_total_sect_num;
+int SLC_total_util_sect_num; 
+int SLC_total_extra_sect_num;
+int MLC_total_sect_num;
+int MLC_total_util_sect_num; 
+int MLC_total_extra_sect_num;
+
+
 double DEVICE_SERVICE_TIME;
 double DISK_SERVICE_TIME;
 
