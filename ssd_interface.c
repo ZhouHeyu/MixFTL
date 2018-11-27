@@ -71,6 +71,16 @@ int real_max = 0;
 int cache_min = -1;
 int cache_max = 0;
 
+/**********************************************
+			Same FTL importance function 
+**********************************************/
+void DFTL_Hit_CMT(int pageno,int operation);
+void DFTL_NOT_Hit_CMT(int pageno,int operation);
+double FTL_Scheme(unsigned int secno,int scount,int operation);
+double DFTL_Scheme(unsigned int secno,int scount,int operation);
+double FAST_Scheme(unsigned int secno,int scount,int operation);
+
+
 // Interface between disksim & fsim 
 
 void reset_flash_stat()
@@ -163,7 +173,7 @@ void initFlash()
   total_extr_blk_num = total_blk_num - total_util_blk_num;        // total extra block number
 
   ASSERT(total_extr_blk_num != 0);
-// ÉèÖÃ×îÐ¡µÄmin blk num
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½min blk num
   if (nand_init(total_blk_num, 30) < 0) {
     EXIT(-4); 
   }
@@ -204,7 +214,7 @@ void printWearout()
 void endFlash()
 {
   nand_stat_print(outputfile);
-  //zj-Ìí¼ÓÊä³ö¸÷¸ö¿éµÄ²Á³ý´ÎÊý
+  //zj-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   nand_ecn_print(outputfile);
   ftl_op->end;
   nand_end();
@@ -363,244 +373,308 @@ int youkim_flag1=0;
 
 double callFsim(unsigned int secno, int scount, int operation)
 {
-  double delay; 
-  int bcount;
-  unsigned int blkno; // pageno for page based FTL
-  int cnt,z; int min_ghost;
+	double delay;
+  	if(ftl_type == 1 ) { 
+		// page based FTL 
+		delay = FTL_Scheme(secno, scount, operation);
+  	}else if(ftl_type == 2){
+  		// block based FTL 
+		delay = FTL_Scheme(secno, scount, operation);
+	} else if(ftl_type == 3 ) { 
+  		// o-pagemap scheme
+		delay = DFTL_Scheme(secno, scount, operation);
+	} else if(ftl_type == 4){
+  		// FAST scheme
+  		delay = FAST_Scheme(secno, scount, operation);
+  	}
+	
+  	return delay;
+}
 
-  int pos=-1,pos_real=-1,pos_ghost=-1;
+/************************
+* Name: FAST_Scheme
+* Date: 2018-11-27
+* Author: zhoujie
+* param: operation(1:read , 0 :write)
+* return value:
+* Function: 
+* Attention:
+*************************/
+double FAST_Scheme(unsigned int secno,int scount,int operation)
+{
+	double delay; 
+  	int bcount;
+  	unsigned int blkno; // pageno for page based FTL
+  	int cnt,z; int min_ghost;
 
-  int debug_i,debug_j;
-  if(ftl_type == 1){ }
-
-  if(ftl_type == 3) {
-      page_num_for_2nd_map_table = (opagemap_num / MAP_ENTRIES_PER_PAGE);
-    
-      if(youkim_flag1 == 0 ) {
-        youkim_flag1 = 1;
-        init_arr();
-      }
-
-      if((opagemap_num % MAP_ENTRIES_PER_PAGE) != 0){
-        page_num_for_2nd_map_table++;
-      }
-  }
-      
-  // page based FTL 
-  if(ftl_type == 1 ) { 
-    blkno = secno / 4;
+  	int pos=-1,pos_real=-1,pos_ghost=-1;
+	blkno = secno/4;
+	
     bcount = (secno + scount -1)/4 - (secno)/4 + 1;
-  }  
-  // block based FTL 
-  else if(ftl_type == 2){
-    blkno = secno/4;
+	cnt = bcount;
+	while(cnt > 0){
+		cnt--;
+		if(operation == 0){
+        	write_count++;
+        }else {
+         	read_count++;
+        }
+		send_flash_request(blkno*4, 4, operation, 1); //cache_min is a page for page baseed FTL
+        blkno++;
+	}
+
+	delay = calculate_delay_flash();
+	return delay;
+	
+}
+
+/************************
+* Name: FTL_Scheme
+* Date: 2018-11-27
+* Author: zhoujie
+* param: 
+*		 
+*		 operation(1:read , 0 :write)
+* return value:
+* Function: 
+* Attention: Block FTL and pure page FTL
+*************************/
+double FTL_Scheme(unsigned int secno,int scount,int operation)
+{
+	double delay; 
+  	int bcount;
+  	unsigned int blkno; // pageno for page based FTL
+  	int cnt,z; int min_ghost;
+
+  	int pos=-1,pos_real=-1,pos_ghost=-1;
+	blkno = secno/4;
+	
     bcount = (secno + scount -1)/4 - (secno)/4 + 1;
-  }
-  // o-pagemap scheme
-  else if(ftl_type == 3 ) { 
+	cnt = bcount;
+	while(cnt > 0){
+		cnt--;
+		send_flash_request(blkno*4, 4, operation, 1); //cache_min is a page for page baseed FTL
+        blkno++;
+	}
+	delay = calculate_delay_flash();
+	
+	return delay;
+	
+}
+
+
+
+
+/***************DFTL Scheme Function *******************************/
+/************************
+* Name: DFTL_Scheme
+* Date: 2018-11-27
+* Author: zhoujie
+* param: secno(sector size)
+*		 scount(sector size)
+*		 operation(1:read , 0 :write)
+* return value:
+* Function: 
+* Attention: page size is 2K
+*************************/
+double DFTL_Scheme(unsigned int secno,int scount, int operation)
+{	
+	int bcount;
+	int blkno; // pageno for page based FTL
+	
+	double delay;
+	int cnt,z; int min_ghost;	
+	int pos=-1,pos_real=-1,pos_ghost=-1;
+	int debug_i,debug_j;
+
+
+	page_num_for_2nd_map_table = (opagemap_num / MAP_ENTRIES_PER_PAGE);
+
+	if(youkim_flag1 == 0 ) {
+		youkim_flag1 = 1;
+		init_arr();
+	}
+
+	if((opagemap_num % MAP_ENTRIES_PER_PAGE) != 0){
+		page_num_for_2nd_map_table++;
+	}
+
     blkno = secno / 4;
     blkno += page_num_for_2nd_map_table;
     bcount = (secno + scount -1)/4 - (secno)/4 + 1;
-  }  
-  // FAST scheme
-  else if(ftl_type == 4){
-    blkno = secno/4;
-    bcount = (secno + scount -1)/4 - (secno)/4 + 1;
-  }
+	cnt = bcount;
 
-  cnt = bcount;
-
-  switch(operation)
-  {
-    //write/read
-    case 0:
-    case 1:
-
-    while(cnt > 0)
-    {
-          cnt--;
-
-        // page based FTL
-        if(ftl_type == 1){
-          send_flash_request(blkno*4, 4, operation, 1); 
-          blkno++;
-        }
-
-        // blck based FTL
-        else if(ftl_type == 2){
-          send_flash_request(blkno*4, 4, operation, 1); 
-          blkno++;
-        }
-
-        // opagemap ftl scheme
-        else if(ftl_type == 3)
-        {
-          /************************************************
-            primary map table 
-          *************************************************/
-          //1. pagemap in SRAM 
-
-            rqst_cnt++;
-          if((opagemap[blkno].map_status == MAP_REAL) || (opagemap[blkno].map_status == MAP_GHOST))
-          {
-            cache_hit++;
-			opagemap[blkno].map_age++;
-
-            if(opagemap[blkno].map_status == MAP_GHOST){
-
-              if ( real_min == -1 ) {
-                real_min = 0;
-                find_real_min();
-              }    
-              if(opagemap[real_min].map_age <= opagemap[blkno].map_age) 
-              {
-                find_real_min();  // probably the blkno is the new real_min alwaz
-                opagemap[blkno].map_status = MAP_REAL;
-                opagemap[real_min].map_status = MAP_GHOST;
-
-                pos_ghost = search_table(ghost_arr,MAP_GHOST_MAX_ENTRIES,blkno);
-                ghost_arr[pos_ghost] = -1;
-                
-                pos_real = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
-                real_arr[pos_real] = -1;
-
-                real_arr[pos_real]   = blkno; 
-                ghost_arr[pos_ghost] = real_min; 
-              }
-            }
-            else if(opagemap[blkno].map_status == MAP_REAL) 
-            {
-              if ( real_max == -1 ) {
-                real_max = 0;
-                find_real_max();
-                printf("Never happend\n");
-              }
-
-              if(opagemap[real_max].map_age <= opagemap[blkno].map_age)
-              {
-                real_max = blkno;
-              }  
-            }
-            else {
-              printf("forbidden/shouldnt happen real =%d , ghost =%d\n",MAP_REAL,MAP_GHOST);
-            }
-          }
-
-          //2. opagemap not in SRAM 
-          else
-          {
-            //if map table in SRAM is full
-            if((MAP_REAL_MAX_ENTRIES - MAP_REAL_NUM_ENTRIES) == 0)
-            {
-              if((MAP_GHOST_MAX_ENTRIES - MAP_GHOST_NUM_ENTRIES) == 0)
-              { //evict one entry from ghost cache to DRAM or Disk, delay = DRAM or disk write, 1 oob write for invalidation 
-                min_ghost = find_min_ghost_entry();
-                  evict++;
-
-                if(opagemap[min_ghost].update == 1) {
-                  update_reqd++;
-                  opagemap[min_ghost].update = 0;
-                  send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);   // read from 2nd mapping table then update it
-                  send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);   // write into 2nd mapping table  
-                } 
-//				add zhoujie 11-13
-				nand_ppn_2_lpn_in_CMT_arr[opagemap[min_ghost].ppn]=0;
-                opagemap[min_ghost].map_status = MAP_INVALID;
-
-                MAP_GHOST_NUM_ENTRIES--;
-
-                //evict one entry from real cache to ghost cache 
-                MAP_REAL_NUM_ENTRIES--;
-                MAP_GHOST_NUM_ENTRIES++;
-                find_real_min();
-                opagemap[real_min].map_status = MAP_GHOST;
-
-                pos = search_table(ghost_arr,MAP_GHOST_MAX_ENTRIES,min_ghost);
-                ghost_arr[pos]=-1;
-
-                
-                ghost_arr[pos]= real_min;
-                
-                pos = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
-                real_arr[pos]=-1;
-              }
-              else{
-                //evict one entry from real cache to ghost cache 
-                MAP_REAL_NUM_ENTRIES--;
-                find_real_min();
-                opagemap[real_min].map_status = MAP_GHOST;
-               
-                pos = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
-                real_arr[pos]=-1;
-
-                pos = find_free_pos(ghost_arr,MAP_GHOST_MAX_ENTRIES);
-                ghost_arr[pos]=real_min;
-                
-                MAP_GHOST_NUM_ENTRIES++;
-              }
-            }
-
-            flash_hit++;
-            send_flash_request(((blkno-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);   // read from 2nd mapping table
-
-            opagemap[blkno].map_status = MAP_REAL;
-
-            opagemap[blkno].map_age = opagemap[real_max].map_age + 1;
-            real_max = blkno;
-            MAP_REAL_NUM_ENTRIES++;
-            
-            pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
-            real_arr[pos] = blkno;
+	while(cnt > 0){
+		cnt--
+		rqst_cnt++;
+		if((opagemap[blkno].map_status == MAP_REAL) || (opagemap[blkno].map_status == MAP_GHOST))
+		{
+			DFTL_Hit_CMT(blkno, operation);
 			
-          }
-
-         //comment out the next line when using cache
-          if(operation==0){
-            write_count++;
-            opagemap[blkno].update = 1;
-          }
-          else
-             read_count++;
-//       Êý¾ÝÒ³ÎÞÂÛ¶ÁÐ´£¬×îºóµÄÓ³ÉäÏî¶¼¼ÓÔØµ½ÁËCMTÖÐ£¬Ö®ºóµÄÓ³ÉäÏîÐÞ¸Ä±êÖ¾Î»¿ÉÒÔÔÚwriteº¯ÊýÀïÃæÐÞ¸Ä add zhoujie 11-13
-		  nand_ppn_2_lpn_in_CMT_arr[opagemap[blkno].ppn]=1;
-
-          send_flash_request(blkno*4, 4, operation, 1); 
-          blkno++;
-
-//		add zhoujie cycle debug
-			if(rqst_cnt%10000 == 0){
-				debug_j=0;
-				for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
-					if(nand_ppn_2_lpn_in_CMT_arr[debug_i] == 1){
-						debug_j++;
-					}
-				}
-				if(debug_j > MAP_REAL_MAX_ENTRIES+MAP_GHOST_MAX_ENTRIES){
-					printf("nand_ppn_2_lpn_in_CMT_arr set 1 num is %d\n",debug_j);
-					assert(0);
-				}
-			}
+		}else{
+			DFTL_NOT_Hit_CMT(blkno, operation);
+		}
+	
+		//load data into cache,response to request
+		if(operation == 0){
+			write_count++;
+			opagemap[blkno].update = 1;
+		}
+		else
+		 	read_count++;
 		  
-        }
+		nand_ppn_2_lpn_in_CMT_arr[opagemap[blkno].ppn]=1;
+    	send_flash_request(blkno*4, 4, operation, 1); 
+		blkno++;
+		//add zhoujie cycle debug
+      	if(rqst_cnt%10000 == 0){
+        	debug_j=0;
+        	for(debug_i=0 ; debug_i < nand_blk_num*PAGE_NUM_PER_BLK ; debug_i++){
+          		if(nand_ppn_2_lpn_in_CMT_arr[debug_i] == 1){
+            		debug_j++;
+          		}
+        	}
+        	if(debug_j > MAP_REAL_MAX_ENTRIES+MAP_GHOST_MAX_ENTRIES){
+          		printf("nand_ppn_2_lpn_in_CMT_arr set 1 num is %d\n",debug_j);
+          		assert(0);
+        	}
+    	}
+	}
+	//compute flash rqst delay
+	delay = calculate_delay_flash();
+	return delay;
+}
+/************************
+* Name: DFTL_Hit_CMT
+* Date: 2018-11-27
+* Author: zhoujie
+* param: pageno(hit logical page number(lpn))
+*		 operation(1:read ,0:write)
+* return value:void
+* Function:
+* Attention:
+*/
+void DFTL_Hit_CMT(int pageno,int operation)
+{
+	int blkno = pageno;
+	int cnt,z; int min_ghost;	
+	int pos=-1,pos_real=-1,pos_ghost=-1;
+	
+	cache_hit++;
+	
+	opagemap[blkno].map_age++;
+	if(opagemap[blkno].map_status == MAP_GHOST){
+	//Hit Map_Ghost	maybe move to real list
+		if ( real_min == -1 ) {
+			real_min = 0;
+			find_real_min();
+		}    
+		if(opagemap[real_min].map_age <= opagemap[blkno].map_age) {
+			find_real_min();  // probably the blkno is the new real_min alwaz
+			opagemap[blkno].map_status = MAP_REAL;
+			opagemap[real_min].map_status = MAP_GHOST;
 
-        // FAST scheme  
-        else if(ftl_type == 4){ 
+			pos_ghost = search_table(ghost_arr,MAP_GHOST_MAX_ENTRIES,blkno);
+			ghost_arr[pos_ghost] = -1;
 
-          if(operation == 0){
-            write_count++;
-          }
-          else read_count++;
+			pos_real = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
+			real_arr[pos_real] = -1;
 
-          send_flash_request(blkno*4, 4, operation, 1); //cache_min is a page for page baseed FTL
-          blkno++;
-        }
-    }
-    break;
-  }
+			real_arr[pos_real]	 = blkno; 
+			ghost_arr[pos_ghost] = real_min; 
+		}
+	}else if(opagemap[blkno].map_status == MAP_REAL) {
+	// Hit Map_Real 
+		if ( real_max == -1 ) {
+			real_max = 0;
+			find_real_max();
+			printf("Never happend\n");
+		}
 
-  delay = calculate_delay_flash();
+		if(opagemap[real_max].map_age <= opagemap[blkno].map_age)
+		{
+			real_max = blkno;
+		}  
+	}else {
+		printf("forbidden/shouldnt happen real =%d , ghost =%d\n",MAP_REAL,MAP_GHOST);
+		ASSERT(0);
+	}
+	
+}
 
-  return delay;
+/************************
+* Name: DFTL_NOT_Hit_CMT
+* Date: 2018-11-27
+* Author: zhoujie
+* param: 
+* return value:
+* Function:
+* Attention:
+*/
+void DFTL_NOT_Hit_CMT(int pageno,int operation)
+{
+	int blkno = pageno;
+	int cnt,z; int min_ghost;	
+	int pos=-1,pos_real=-1,pos_ghost=-1;
+
+	//opagemap not in SRAM 
+	if((MAP_REAL_MAX_ENTRIES - MAP_REAL_NUM_ENTRIES) == 0){
+		// map table(real list) is full
+		if((MAP_GHOST_MAX_ENTRIES - MAP_GHOST_NUM_ENTRIES) == 0){ 
+		// map table(ghost list) is full
+		//evict one entry from ghost cache to DRAM or Disk, delay = DRAM or disk write, 1 oob write for invalidation 
+			min_ghost = find_min_ghost_entry();
+			evict++;
+			if(opagemap[min_ghost].update == 1) {
+				update_reqd++;
+				opagemap[min_ghost].update = 0;
+				// read from 2nd mapping table then update it
+				send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);   
+				// write into 2nd mapping table 
+				send_flash_request(((min_ghost-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);   
+			} 
+			
+			//add zhoujie 11-13
+			nand_ppn_2_lpn_in_CMT_arr[opagemap[min_ghost].ppn]=0;
+			opagemap[min_ghost].map_status = MAP_INVALID;
+
+			MAP_GHOST_NUM_ENTRIES--;
+			//evict one entry from real cache to ghost cache 
+			MAP_REAL_NUM_ENTRIES--;
+			MAP_GHOST_NUM_ENTRIES++;
+			find_real_min();
+			opagemap[real_min].map_status = MAP_GHOST;
+			pos = search_table(ghost_arr,MAP_GHOST_MAX_ENTRIES,min_ghost);
+			ghost_arr[pos]=-1;
+			ghost_arr[pos]= real_min;
+			pos = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
+			real_arr[pos]=-1;
+					
+		}else{
+			//(ghost-list not full)evict one entry from real cache to ghost cache 
+			MAP_REAL_NUM_ENTRIES--;
+			find_real_min();
+			opagemap[real_min].map_status = MAP_GHOST;
+				   
+			pos = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
+			real_arr[pos]=-1;
+
+			pos = find_free_pos(ghost_arr,MAP_GHOST_MAX_ENTRIES);
+			ghost_arr[pos]=real_min;
+			
+			MAP_GHOST_NUM_ENTRIES++;
+		}
+	}// map table(real-list) full delete finish 
+	//load req map entry into real-list
+	flash_hit++;
+	send_flash_request(((blkno-page_num_for_2nd_map_table)/MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);	// read from 2nd mapping table
+	opagemap[blkno].map_status = MAP_REAL;
+	opagemap[blkno].map_age = opagemap[real_max].map_age + 1;
+	real_max = blkno;
+	MAP_REAL_NUM_ENTRIES++;
+			
+	pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
+	real_arr[pos] = blkno;		
 }
 
 

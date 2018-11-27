@@ -60,7 +60,7 @@ int SLC_gc_get_free_blk(int small, int mapdir_flag);
 int MLC_gc_get_free_blk(int small, int mapdir_flag);
 
 
-/*
+/******************************************
 * Name : Mopm_init
 * Date : 2018-11-22 
 * author: zhoujie 
@@ -70,7 +70,7 @@ int MLC_gc_get_free_blk(int small, int mapdir_flag);
 * return value: 0 is normal finish
 * Attention : all Mix_opage_map based on 4K page size
 *			  MLC and SLC map entry all in SLC 
-*/
+***********************************************/
 int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num )
 {
   int i;
@@ -144,15 +144,10 @@ int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num )
 	Mopm_write(i*S_SECT_NUM_PER_PAGE,S_SECT_NUM_PER_PAGE,2);
   }
 
-// 将全部的物理地址都转化到对应的mix_upn编号(based 4k)，SLC在前，MLC在后
-//  mix_upn_SLC_start = 0;
-//  mix_upn_SLC_end = nand_SLC_blk_num * S_PAGE_NUM_PER_BLK / 2 -1;
-//  mix_upn_MLC_start = nand_SLC_blk_num * S_PAGE_NUM_PER_BLK / 2;
-//  mix_upn_MLC_end = nand_SLC_blk_num * S_PAGE_NUM_PER_BLK / 2 + nand_MLC_blk_num * M_PAGE_NUM_PER_BLK;  
   return 0;
 }
 
-/*
+/********************************
 * Name : Mopm_end
 * Date : 2018-11-22 
 * author: zhoujie 
@@ -160,7 +155,7 @@ int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num )
 * return value:void
 * Function :to free init malloc memory
 * Attention:
-*/
+*********************************/
 void Mopm_end()
 {
   if(Mix_4K_opagemap != NULL){
@@ -182,7 +177,7 @@ void Mopm_end()
 * return value:
 * Function :
 * Attention: 函数定义和dftl.c存在重合
-*/
+************************************/
 void Mix_opagemap_reset()
 {
   cache_hit = 0;
@@ -210,7 +205,7 @@ void Mix_opagemap_reset()
 *			  下面应该区分对应的SLC和MLC物理地址转化
 *			  数据页的读取都是按4K对齐
 *			  翻译页的读取都是按2K对齐
-*/
+*****************************************/
 size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
 {
   int i, sect_num, flag;
@@ -275,7 +270,7 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
 * Function :函数处理流程 分配新的物理地址，将旧的数据页标记为无效，写入新的地址
 * Attention: 翻译页直接更新到SLC中去，数据页需要根据数据冷热添加到对应的SLC还是MLC中去
 *     
-*/
+***************************************/
 size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 {
 	int i;
@@ -319,7 +314,7 @@ size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 * Attention: 该函数由opm_write 函数调用，主要实现将数据写入到SLC中
 *			 需要区分是否为翻译页更新还是数据页更新，不同的类型的更新数据页的
 *			 对齐方式不一样
-*/
+*************************************/
 
 size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 {
@@ -433,7 +428,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 * Function :
 * Attention: 该函数由opm_write 函数调用，主要实现将数据写入到MLC中
 *			 MLC只当作数据盘使用，不存储翻译页
-*/
+**************************************/
 size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 {
 	int i;
@@ -519,7 +514,7 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 * return value: （-1：重新open了一个新的SLC块，0:旧块可以继续写） 
 * Function :
 * Attention:
-*/
+**************************************/
 int SLC_gc_get_free_blk(int small, int mapdir_flag)
 {
   if (free_SLC_page_no[small] >= S_SECT_NUM_PER_BLK) {
@@ -538,7 +533,7 @@ int SLC_gc_get_free_blk(int small, int mapdir_flag)
 * return value: (-1：重新open了一个新的MLC块，0:旧块可以继续写） 
 * Function :
 * Attention: 目前MLC支持数据页的写入，所以small当前的调入为1
-*/
+**************************************/
 int MLC_gc_get_free_blk(int small, int mapdir_flag)
 {
   if (free_MLC_page_no[small] >= M_SECT_NUM_PER_BLK) {
@@ -559,7 +554,7 @@ int MLC_gc_get_free_blk(int small, int mapdir_flag)
 * return value:
 * Function : 当SLC的free 块个数小于阈值，该函数触发进行数据搬移
 * Attention: 注意区分SLC中的翻译块和数据块的更新
-*/
+**************************************/
 int  SLC_gc_run(int small,int mapdir_flag)
 {
 	int benefit = 0;
@@ -587,7 +582,7 @@ int  SLC_gc_run(int small,int mapdir_flag)
 * return value:
 * Function : 当SLC gc run回收的时候，进行调用，主要完成翻译块的数据页拷贝
 * Attention: 翻译页的大小为2k,和底层的SLC也大小一致
-*/
+**************************************/
 int SLC_map_gc_run(int victim_blk_no,int mapdir_flag)
 {
 	int small;
@@ -667,7 +662,7 @@ int SLC_map_gc_run(int victim_blk_no,int mapdir_flag)
 * return value:
 * Function : 当SLC gc run回收的时候，进行调用，主要完成数据块的数据页拷贝
 * Attention: 翻译页的大小为4k,为底层SLC的页大小的2倍
-*/
+*****************************************/
 int SLC_data_gc_run(int victim_blk_no,int mapdir_flag)
 {
 	int small;
