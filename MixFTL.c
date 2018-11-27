@@ -40,7 +40,7 @@ _u32 system_4K_opagemap_num; // (map lpn to 4k) + (user 4k page)
 
 
 
-int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num, blk_t extra_num );
+int Mopm_init(blk_t SLC_blk_num,blk_t MLC_blk_num);
 void Mopm_end();
 void opagemap_reset();
 size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag);
