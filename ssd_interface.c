@@ -33,6 +33,8 @@ int flag1 = 1;
 int count = 0;
 
 int page_num_for_2nd_map_table;
+// add zhoujie 11-27
+int Mix_page_num_for_2nd_map_table;
 
 #define MAP_REAL_MAX_ENTRIES 6552// real map table size in bytes
 #define MAP_GHOST_MAX_ENTRIES 1640// ghost_num is no of entries chk if this is ok
@@ -79,6 +81,11 @@ void DFTL_NOT_Hit_CMT(int pageno,int operation);
 double FTL_Scheme(unsigned int secno,int scount,int operation);
 double DFTL_Scheme(unsigned int secno,int scount,int operation);
 double FAST_Scheme(unsigned int secno,int scount,int operation);
+
+void MixFTL_Hit_CMT(int pageno,int operation);
+void MixFTL_NOT_Hit_CMT(int pageno,int operation);
+double MixFTL_Scheme(unsigned int secno,int scount, int operation);
+
 
 
 // Interface between disksim & fsim 
@@ -288,7 +295,6 @@ void send_flash_request(int start_blk_no, int block_cnt, int operation, int mapd
 
 	//write
 	case 0:
-
 		op_func = ftl_op->write;
 		while (block_cnt> 0) {
 			size = op_func(start_blk_no, block_cnt, mapdir_flag);
@@ -299,8 +305,6 @@ void send_flash_request(int start_blk_no, int block_cnt, int operation, int mapd
 		break;
 	//read
 	case 1:
-
-
 		op_func = ftl_op->read;
 		while (block_cnt> 0) {
 			size = op_func(start_blk_no, block_cnt, mapdir_flag);
@@ -325,9 +329,30 @@ void find_real_max()
   }
 }
 
+/***************************
+* Name: Mix_find_real_max
+* Date: 2018-11-27
+* Author: ZhouJie
+* param: void
+* return value: reset global 'real_min' value
+* Function: 
+* Attention: 
+***************************/
+void Mix_find_real_max()
+{
+  int i; 
+  
+  for(i=0;i < MAP_REAL_MAX_ENTRIES; i++) {
+      if(Mix_4K_opagemap[real_arr[i]].map_age > Mix_4K_opagemap[real_max].map_age) {
+          real_max = real_arr[i];
+      }
+  }
+}
+
+
+
 void find_real_min()
 {
-  
   int i,index; 
   int temp = 99999999;
 
@@ -338,6 +363,53 @@ void find_real_min()
             index = i;
         }
   }    
+}
+/***************************
+* Name: Mix_find_real_min
+* Date: 2018-11-27
+* Author: ZhouJie
+* param: void
+* return value: reset global 'real_min' value
+* Function: 
+* Attention: 
+***************************/
+void Mix_find_real_min()
+{
+  int i,index; 
+  int temp = 99999999;
+
+  for(i=0; i < MAP_REAL_MAX_ENTRIES; i++) {
+        if(Mix_4K_opagemap[real_arr[i]].map_age <= temp) {
+            real_min = real_arr[i];
+            temp = Mix_4K_opagemap[real_arr[i]].map_age;
+            index = i;
+        }
+  } 	
+}
+
+/***************************
+* Name: Mix_find_min_ghost_entry
+* Date: 2018-11-27
+* Author: ZhouJie
+* param: void
+* return value: reset global 'ghost_min' value
+* Function: 
+* Attention: 
+***************************/
+int Mix_find_min_ghost_entry()
+{
+  int i,index;
+  int ghost_min = 0;
+  int temp = 99999999;
+
+  for(i=0; i < MAP_REAL_MAX_ENTRIES; i++) {
+        if(Mix_4K_opagemap[ghost_arr[i]].map_age <= temp) {
+            ghost_min = ghost_arr[i];
+            temp = Mix_4K_opagemap[ghost_arr[i]].map_age;
+            index = i;
+        }
+  } 	
+  return ghost_min;
 }
 
 int find_min_ghost_entry()
@@ -358,7 +430,6 @@ int find_min_ghost_entry()
 
 void init_arr()
 {
-
   int i;
   for( i = 0; i < MAP_REAL_MAX_ENTRIES; i++) {
       real_arr[i] = -1;
@@ -369,7 +440,6 @@ void init_arr()
   for( i = 0; i < CACHE_MAX_ENTRIES; i++) {
       cache_arr[i] = -1;
   }
-
 }
 
 int search_table(int *arr, int size, int val) 
@@ -434,7 +504,9 @@ double callFsim(unsigned int secno, int scount, int operation)
 	} else if(ftl_type == 4){
   		// FAST scheme
   		delay = FAST_Scheme(secno, scount, operation);
-  	}
+  	} else if(ftl_type == 5){
+		delay = MixFTL_Scheme(secno,scount,operation);
+	}
 	
   	return delay;
 }
@@ -509,8 +581,6 @@ double FTL_Scheme(unsigned int secno,int scount,int operation)
 	return delay;
 	
 }
-
-
 
 
 /***************DFTL Scheme Function *******************************/
@@ -724,6 +794,207 @@ void DFTL_NOT_Hit_CMT(int pageno,int operation)
 	pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
 	real_arr[pos] = blkno;		
 }
+/************************************************************
+*				Mix FTL	Scheme 
+*************************************************************/
+/***************************
+* Name: MixFTL_Scheme
+* Date: 2018-11-27
+* Author:ZhouJie
+* param: secno
+		 scount
+		 operation(0:write, 1:read)
+* return value: delay(SLC_flash_delay+MLC_flash_delay)
+* Function: 
+* Attention:all data page size is 4k
+***************************/
+double MixFTL_Scheme(unsigned int secno,int scount, int operation)
+{
+	int bcount;
+	int blkno; // pageno for page based FTL
+	
+	double delay;
+	int cnt,z; int min_ghost;	
+	int pos=-1,pos_real=-1,pos_ghost=-1;
+	int debug_i,debug_j;
+
+	Mix_page_num_for_2nd_map_table = (Mix_4K_opagemap_num/MIX_MAP_ENTRIES_PER_PAGE );
+	if(youkim_flag1 == 0 ) {
+		youkim_flag1 = 1;
+		init_arr();
+	}
+
+	if((Mix_4K_opagemap_num % MAP_ENTRIES_PER_PAGE) != 0){
+		Mix_page_num_for_2nd_map_table++;
+	}
+
+    blkno = secno / UPN_SECT_NUM_PER_PAGE;
+    blkno += Mix_page_num_for_2nd_map_table;
+    bcount = (secno + scount -1)/UPN_SECT_NUM_PER_PAGE- (secno)/UPN_SECT_NUM_PER_PAGE + 1;
+	cnt = bcount;
+	while(cnt > 0){
+		cnt--;
+		rqst_cnt++;
+		if((Mix_4K_opagemap[blkno].map_status == MAP_REAL) || (Mix_4K_opagemap[blkno].map_status == MAP_GHOST)){
+			MixFTL_Hit_CMT(blkno, operation);
+		}else{
+			MixFTL_NOT_Hit_CMT(blkno, operation);
+		}
+	
+		//load data into cache,response to request
+		if(operation == 0){
+			write_count++;
+			Mix_4K_opagemap[blkno].update = 1;
+		}
+		else
+		 	read_count++;
+		//调测阶段所有的写往SLC  
+    	send_flash_request(blkno*UPN_SECT_NUM_PER_PAGE, UPN_SECT_NUM_PER_PAGE, operation, 1); 
+		blkno++;
+	}
+	
+	delay = calculate_delay_SLC_flash();
+	delay += calculate_delay_MLC_flash();
+	return delay;
+}
+
+/************************
+* Name: MixFTL_Hit_CMT
+* Date: 2018-11-27
+* Author: zhoujie
+* param: pageno(hit logical page number(lpn))
+*		 operation(1:read ,0:write)
+* return value:void
+* Function:
+* Attention:
+***********************/
+void MixFTL_Hit_CMT(int pageno, int operation)
+{
+	int blkno = pageno;
+	int cnt,z; int min_ghost;	
+	int pos=-1,pos_real=-1,pos_ghost=-1;
+
+	cache_hit++;
+
+	Mix_4K_opagemap[blkno].map_age++;
+	if(Mix_4K_opagemap[blkno].map_status == MAP_GHOST){
+	//Hit Map_Ghost maybe move to real list
+		if ( real_min == -1 ) {
+			real_min = 0;
+			Mix_find_real_min();
+		}	 
+		if(Mix_4K_opagemap[real_min].map_age <= Mix_4K_opagemap[blkno].map_age) {
+			Mix_find_real_min();  // probably the blkno is the new real_min alwaz
+			Mix_4K_opagemap[blkno].map_status = MAP_REAL;
+			Mix_4K_opagemap[real_min].map_status = MAP_GHOST;
+
+			pos_ghost = search_table(ghost_arr,MAP_GHOST_MAX_ENTRIES,blkno);
+			ghost_arr[pos_ghost] = -1;
+
+			pos_real = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
+			real_arr[pos_real] = -1;
+
+			real_arr[pos_real]	 = blkno; 
+			ghost_arr[pos_ghost] = real_min; 
+		}
+	}else if(Mix_4K_opagemap[blkno].map_status == MAP_REAL) {
+	// Hit Map_Real 
+		if ( real_max == -1 ) {
+			real_max = 0;
+			Mix_find_real_max();
+			printf("Never happend\n");
+		}
+
+		if(Mix_4K_opagemap[real_max].map_age <= Mix_4K_opagemap[blkno].map_age)
+		{
+			real_max = blkno;
+		}  
+	}else {
+		printf("forbidden/shouldnt happen real =%d , ghost =%d\n",MAP_REAL,MAP_GHOST);
+		ASSERT(0);
+	}
+
+}
+
+/************************
+* Name: MixFTL_NOT_Hit_CMT
+* Date: 2018-11-27
+* Author: zhoujie
+* param: 
+* return value:
+* Function:
+* Attention:
+***********************/
+void MixFTL_NOT_Hit_CMT(int pageno, int operation)
+{
+	int blkno = pageno;
+	int cnt,z; int min_ghost;	
+	int pos=-1,pos_real=-1,pos_ghost=-1;
+
+	//opagemap not in SRAM 
+	if((MAP_REAL_MAX_ENTRIES - MAP_REAL_NUM_ENTRIES) == 0){
+		// map table(real list) is full
+		if((MAP_GHOST_MAX_ENTRIES - MAP_GHOST_NUM_ENTRIES) == 0){ 
+		// map table(ghost list) is full
+		//evict one entry from ghost cache to DRAM or Disk, delay = DRAM or disk write, 1 oob write for invalidation 
+			min_ghost = Mix_find_min_ghost_entry();
+			evict++;
+			if(Mix_4K_opagemap[min_ghost].update == 1) {
+				update_reqd++;
+				Mix_4K_opagemap[min_ghost].update = 0;
+				// read from 2nd mapping table then update it
+				send_flash_request(((min_ghost-Mix_page_num_for_2nd_map_table)/MIX_MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);	
+				// write into 2nd mapping table 
+				send_flash_request(((min_ghost-Mix_page_num_for_2nd_map_table)/MIX_MAP_ENTRIES_PER_PAGE)*4, 4, 0, 2);	
+			} 
+			
+			//add zhoujie 11-13
+//			nand_ppn_2_lpn_in_CMT_arr[opagemap[min_ghost].ppn]=0;
+			Mix_4K_opagemap[min_ghost].map_status = MAP_INVALID;
+
+			MAP_GHOST_NUM_ENTRIES--;
+			//evict one entry from real cache to ghost cache 
+			MAP_REAL_NUM_ENTRIES--;
+			MAP_GHOST_NUM_ENTRIES++;
+			Mix_find_real_min();
+			Mix_4K_opagemap[real_min].map_status = MAP_GHOST;
+			pos = search_table(ghost_arr,MAP_GHOST_MAX_ENTRIES,min_ghost);
+			ghost_arr[pos]=-1;
+			ghost_arr[pos]= real_min;
+			pos = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
+			real_arr[pos]=-1;
+					
+		}else{
+			//(ghost-list not full)evict one entry from real cache to ghost cache 
+			MAP_REAL_NUM_ENTRIES--;
+			Mix_find_real_min();
+			Mix_4K_opagemap[real_min].map_status = MAP_GHOST;
+				   
+			pos = search_table(real_arr,MAP_REAL_MAX_ENTRIES,real_min);
+			real_arr[pos]=-1;
+
+			pos = find_free_pos(ghost_arr,MAP_GHOST_MAX_ENTRIES);
+			ghost_arr[pos]=real_min;
+			
+			MAP_GHOST_NUM_ENTRIES++;
+		}
+	}// map table(real-list) full delete finish 
+	//load req map entry into real-list
+	flash_hit++;
+	send_flash_request(((blkno-Mix_page_num_for_2nd_map_table)/MIX_MAP_ENTRIES_PER_PAGE)*4, 4, 1, 2);	// read from 2nd mapping table
+	Mix_4K_opagemap[blkno].map_status = MAP_REAL;
+	Mix_4K_opagemap[blkno].map_age = Mix_4K_opagemap[real_max].map_age + 1;
+	real_max = blkno;
+	MAP_REAL_NUM_ENTRIES++;
+			
+	pos = find_free_pos(real_arr,MAP_REAL_MAX_ENTRIES);
+	real_arr[pos] = blkno;		
+
+}
+
+
+
+
 
 
 /***********************Mix SSD Function****************************/
