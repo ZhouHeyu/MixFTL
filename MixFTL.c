@@ -355,6 +355,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		
 	s_psn = S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]);
 
+	printf("free SLC blk no : %d\t free SLC page no :%d\n",free_SLC_blk_no[small], free_SLC_page_no[small]);
 	printf("small is %d\ts_psn %d\n",small,s_psn);
 
 	
