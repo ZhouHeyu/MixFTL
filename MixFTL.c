@@ -383,7 +383,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		if(Mix_4K_mapdir[map_lpn].ppn != -1 ){
 			s_psn1 = Mix_4K_mapdir[map_lpn].ppn * S_SECT_NUM_PER_PAGE;
 			for(i=0 ; i< S_SECT_NUM_PER_PAGE; i++){
-				SLC_nand_invalidate( s_psn+i, s_lsn+i);
+				SLC_nand_invalidate( s_psn1+i, s_lsn+i);
 			}
 			nand_stat(SLC_OOB_WRITE);
 		}
