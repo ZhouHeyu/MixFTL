@@ -286,12 +286,12 @@ size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 {
 	int i;
 	int sect_num;
-	int ulpn = lsn/UPN_SECT_NUM_PER_PAGE; // logical page number based 4k
-	int size_u_page = size/UPN_SECT_NUM_PER_PAGE; // size in page based 4k
 	int SLC_flag;
 	
-	ASSERT(ulpn < system_4K_opagemap_num);
-  	ASSERT(ulpn + size_u_page <= system_4K_opagemap_num);
+//	int ulpn = lsn/UPN_SECT_NUM_PER_PAGE; // logical page number based 4k
+//	int size_u_page = size/UPN_SECT_NUM_PER_PAGE; // size in page based 4k
+//	ASSERT(ulpn < system_4K_opagemap_num);
+//  ASSERT(ulpn + size_u_page <= system_4K_opagemap_num);
 
 	if(mapdir_flag <= 2 && mapdir_flag >= 1){ //write to SLC
 	  SLC_flag = 1;
@@ -306,7 +306,7 @@ size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		sect_num = SLC_opm_write(lsn , size, mapdir_flag);
 	}else{
 //  write to MLC
-		sect_num = SLC_opm_write(lsn, size ,mapdir_flag);
+		sect_num = MLC_opm_write(lsn, size ,mapdir_flag);
 	}
 
 	return sect_num;
