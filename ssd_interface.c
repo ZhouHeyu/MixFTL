@@ -458,7 +458,7 @@ int search_table(int *arr, int size, int val)
         printf("arr[%d]=%d ",i,arr[i]);
       }
     }
-    exit(1);
+    assert(0);
     return -1;
 }
 
