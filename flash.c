@@ -1601,7 +1601,7 @@ _u8 SLC_nand_4K_data_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag)
 
   ASSERT(pbn < nand_SLC_blk_num);
   ASSERT(S_OFF_F_SECT(psn) == 0);
-  if (map_flag == 2 || nand_blk[pbn].page_status[pin/S_SECT_NUM_PER_PAGE] == 1){
+  if (map_flag == 2 || SLC_nand_blk[pbn].page_status[pin/S_SECT_NUM_PER_PAGE] == 1){
 	printf("curr SLC nand 4K page support data page writes\n");
 	assert(0);
   }
