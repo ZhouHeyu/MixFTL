@@ -40,7 +40,7 @@ int MLC_TOTAL_MAP_ENTRIES;
 
 #define MIX_MAP_ENTRIES_PER_PAGE 512
 #define UPN_SECT_NUM_PER_PAGE 8
-
+#define UPN_SECT_BITS 3
 _u32 mix_upn_SLC_start;
 _u32 mix_upn_SLC_end;
 _u32 mix_upn_MLC_start;

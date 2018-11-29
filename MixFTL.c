@@ -422,7 +422,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 			Mix_4K_opagemap[data_lpn].free = 0;
 		}
 		//Ð´ÈëÊý¾Ý
-		Mix_4K_opagemap[data_lpn].ppn = S_PAGE_NO_SECT(s_psn);
+		Mix_4K_opagemap[data_lpn].ppn = s_psn >> S_SECT_BITS;
 		Mix_4K_opagemap[data_lpn].IsSLC = 1;
 		free_SLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
 		sect_num = SLC_nand_4K_data_page_write(s_psn, data_lsns, 0, mapdir_flag);
