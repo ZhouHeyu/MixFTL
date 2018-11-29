@@ -758,7 +758,7 @@ int SLC_data_gc_run(int victim_blk_no)
 
 
 //	翻译页更新，确定哪些映射项同属一个翻译页一起更新
-	for(i=0;i < M_PAGE_NUM_PER_BLK;i++) {
+	for(i=0;i < S_PAGE_NUM_PER_BLK/2;i++) {
 		temp_arr[i]=-1; //之后存的都是需要更新的翻译页（SLC）
 	}
 		
