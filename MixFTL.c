@@ -234,6 +234,7 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
 	for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
 		map_lsns[i] = s_lsn + i;
 	}
+	
 	size = SLC_nand_page_read(s_psn, map_lsns, 0);
 	ASSERT( size == S_SECT_NUM_PER_PAGE );
 
@@ -355,9 +356,6 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		
 	s_psn = S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]);
 
-	printf("free SLC blk no : %d\t free SLC page no :%d\n",free_SLC_blk_no[small], free_SLC_page_no[small]);
-	printf("small is %d\ts_psn %d\n",small,s_psn);
-
 	
 	if(s_psn % S_SECT_NUM_PER_PAGE!= 0){
 	  printf("s_psn: %d\n", s_psn);
@@ -382,11 +380,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		//Ð´ÈëÊý¾Ý
 		Mix_4K_mapdir[map_lpn].ppn = S_PAGE_NO_SECT(s_psn);
 		free_SLC_page_no[small] += S_SECT_NUM_PER_PAGE;
-#ifdef DEBUG
-		printf("after add :%d,\tfree SLC page no :%d\n",
-								S_SECT_NUM_PER_PAGE,
-								free_SLC_page_no[small]);
-#endif
+		
 		sect_num = SLC_nand_page_write(s_psn, map_lsns, 0,  mapdir_flag);
 		ASSERT( sect_num == S_SECT_NUM_PER_PAGE );
 	}else{
