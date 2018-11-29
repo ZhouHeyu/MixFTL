@@ -644,7 +644,7 @@ int SLC_map_gc_run(int victim_blk_no)
           		k++;
         	}
 //		’“µΩø’œ–∑≠“Î“≥		
-			benefit += SLC_gc_get_free_blk(small, mapdir_flag);
+			benefit += SLC_gc_get_free_blk(small, 2);
 			Mix_4K_mapdir[(copy_lsn[s]/S_SECT_NUM_PER_PAGE)].ppn  = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]));
 			SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[small],free_SLC_page_no[small]) & (~S_OFF_MASK_SECT), copy_lsn, 1, 2);
 			free_SLC_page_no[small] += S_SECT_NUM_PER_PAGE;
@@ -735,7 +735,7 @@ int SLC_data_gc_run(int victim_blk_no)
         	}
 
 //			»∑∂®ø’œ––¥»ÎŒª÷√
-			benefit += SLC_gc_get_free_blk(small, mapdir_flag);
+			benefit += SLC_gc_get_free_blk(small,1);
 			ASSERT(Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC == 1); //4k data
 			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]));
 			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC = 1;
