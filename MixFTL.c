@@ -341,7 +341,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	}
 	
 //  确保有空白SLC块可以写入，若空白SLC块不够，则进行SLC被动垃圾回收
-	if(free_SLC_page_no[small] >= S_SECT_NUM_PER_PAGE){
+	if(free_SLC_page_no[small] >= S_SECT_NUM_PER_BLK){
 		if ((free_SLC_blk_no[small] = SLC_nand_get_free_blk(0)) == -1) {
 			int j = 0;
 		while (free_SLC_blk_num < SLC_min_fb_num){
@@ -450,7 +450,7 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	}
 
 	//  确保有空白SLC块可以写入，若空白SLC块不够，则进行SLC被动垃圾回收
-	if(free_MLC_page_no[small] >= M_SECT_NUM_PER_PAGE){
+	if(free_MLC_page_no[small] >= M_SECT_NUM_PER_BLK){
 		if ((free_MLC_blk_no[small] = MLC_nand_get_free_blk(0)) == -1) {
 			int j = 0;
 		while (free_MLC_blk_num < MLC_min_fb_num){
