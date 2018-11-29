@@ -21,10 +21,10 @@ int map_page_read=0;
 blk_t extra_blk_num;
 
 // 1:data blk 0:translate blk
-_u32 free_SLC_blk_no[2];
-_u32 free_MLC_blk_no[2];
-_u16 free_SLC_page_no[2];
-_u16 free_MLC_page_no[2];
+static _u32 free_SLC_blk_no[2];
+static _u32 free_MLC_blk_no[2];
+static _u16 free_SLC_page_no[2];
+static _u16 free_MLC_page_no[2];
 
 int MLC_merge_full_num = 0;
 int MLC_merge_switch_num = 0;
