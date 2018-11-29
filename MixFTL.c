@@ -463,14 +463,15 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	if(free_MLC_page_no[small] >= M_SECT_NUM_PER_BLK){
 		if ((free_MLC_blk_no[small] = MLC_nand_get_free_blk(0)) == -1) {
 			int j = 0;
-		while (free_MLC_blk_num < MLC_min_fb_num){
-			j += MLC_gc_run(small, mapdir_flag);
-		}
+			while (free_MLC_blk_num < MLC_min_fb_num){
+				j += MLC_gc_run(small, mapdir_flag);
+			}
 			MLC_gc_get_free_blk(small, mapdir_flag);
-		}
-	}else{
-		free_MLC_page_no[small] = 0;
-	}    		
+		}else{
+			free_MLC_page_no[small] = 0;
+		} 
+	}
+	
 	s_psn = S_SECTOR(free_MLC_blk_no[small], free_MLC_page_no[small]);
 	
 	if(s_psn % M_SECT_NUM_PER_PAGE!= 0){
