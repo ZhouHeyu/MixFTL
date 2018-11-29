@@ -388,7 +388,8 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 			nand_stat(SLC_OOB_WRITE);
 		}
 		//Ð´ÈëÊý¾Ý
-		Mix_4K_mapdir[map_lpn].ppn = S_PAGE_NO_SECT(s_psn);
+		Mix_4K_mapdir[map_lpn].ppn = s_psn >> S_SECT_BITS;
+		
 		free_SLC_page_no[small] += S_SECT_NUM_PER_PAGE;
 		
 		sect_num = SLC_nand_page_write(s_psn, map_lsns, 0,  mapdir_flag);

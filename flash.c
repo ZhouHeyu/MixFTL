@@ -1457,6 +1457,9 @@ _u8 SLC_nand_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag)
   _u16  pin = S_IND_F_SECT(psn);	// sector index, page index is the same as sector index 
   int i, valid_sect_num = 0;
 
+#ifdef DEBUG
+  printf("pbn %d\n");
+#endif
 
   if(pbn >= nand_SLC_blk_num){
     printf("break !\n");
