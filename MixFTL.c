@@ -50,8 +50,8 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag);
 
 
 int  SLC_gc_run(int small, int mapdir_flag);
-int SLC_data_gc_run(int victim_blk_no,int mapdir_flag);
-int SLC_map_gc_run(int victim_blk_no,int mapdir_flag);
+int SLC_data_gc_run(int victim_blk_no);
+int SLC_map_gc_run(int victim_blk_no);
 
 int  MLC_gc_run(int small, int mapdir_flag);
 _u32 SLC_opm_gc_cost_benefit();
@@ -566,23 +566,27 @@ int MLC_gc_get_free_blk(int small, int mapdir_flag)
 * Name : SLC_gc_run
 * Date : 2018-11-26 
 * author: zhoujie 
-* param: 
+* param: small mapdir_flag传入参数其实并没有作用，只是为了耦合调用函数（建议删除）
 * return value:
 * Function : 当SLC的free 块个数小于阈值，该函数触发进行数据搬移
 * Attention: 注意区分SLC中的翻译块和数据块的更新
+*			 需要判断选择的块是翻译块还是数据块
 **************************************/
 int  SLC_gc_run(int small,int mapdir_flag)
 {
 	int benefit = 0;
 	blk_t victim_blk_no;
+	int blk_type = 1;
 //	基于贪婪原则获取SLC的擦除块
 	victim_blk_no = SLC_opm_gc_cost_benefit();
-	if( mapdir_flag == 2 ){
-		benefit = SLC_map_gc_run(victim_blk_no, mapdir_flag);
-	}else if (mapdir_flag == 1){
-		benefit = SLC_data_gc_run(victim_blk_no, mapdir_flag);
+	blk_type = SLC_nand_blk[victim_blk_no].page_status[0];//0:data 1:map
+	
+	if( blk_type == 1 ){
+		benefit = SLC_map_gc_run(victim_blk_no);
+	}else if (blk_type == 0){
+		benefit = SLC_data_gc_run(victim_blk_no);
 	}else {
-		printf("SLC gc run mapdir_flag must(2: map, 1: data)\n");
+		printf("SLC gc run blk_type must(1: map, 0: data)\n");
 		exit(0);
 	}
 	
@@ -594,12 +598,11 @@ int  SLC_gc_run(int small,int mapdir_flag)
 * Date : 2018-11-26 
 * author: zhoujie 
 * param: victim_blk_no(指定回收的翻译块)
-*		 mapdir_flag (为了符合调用函数的传值添加)
 * return value:
 * Function : 当SLC gc run回收的时候，进行调用，主要完成翻译块的数据页拷贝
 * Attention: 翻译页的大小为2k,和底层的SLC也大小一致
 **************************************/
-int SLC_map_gc_run(int victim_blk_no,int mapdir_flag)
+int SLC_map_gc_run(int victim_blk_no)
 {
 	int small;
 	int benefit = 0;
@@ -674,12 +677,11 @@ int SLC_map_gc_run(int victim_blk_no,int mapdir_flag)
 * Date : 2018-11-26 
 * author: zhoujie 
 * param: victim_blk(指定回收的 数据块)
-* 		 mapdir_flag(和调用函数的接口对齐引入的参数)
 * return value:
 * Function : 当SLC gc run回收的时候，进行调用，主要完成数据块的数据页拷贝
 * Attention: 翻译页的大小为4k,为底层SLC的页大小的2倍
 *****************************************/
-int SLC_data_gc_run(int victim_blk_no,int mapdir_flag)
+int SLC_data_gc_run(int victim_blk_no)
 {
 	int small;
 	int benefit = 0;
@@ -713,7 +715,7 @@ int SLC_data_gc_run(int victim_blk_no,int mapdir_flag)
 	s = k = S_OFF_F_SECT(free_SLC_page_no[small]);
 	if(!((s == 0) && (k == 0))){
 		printf("s && k should be 0\n");
-		exit(0);
+		assert(0);
 	}
 	//数据页拷贝,注意数据页是按4k对齐
 	for(i = 0; i < S_SECT_NUM_PER_PAGE; i+=2){
@@ -830,7 +832,7 @@ int SLC_data_gc_run(int victim_blk_no,int mapdir_flag)
 * Name : MLC_gc_run(small, mapdir_flag)
 * Date : 2018-11-24 
 * author: zhoujie 
-* param: 
+* param: small mapdir_flag传入参数其实并没有作用，只是为了耦合调用函数（建议删除）
 * return value:
 * Function : 当MLC的free 块个数小于阈值，该函数触发进行数据搬移
 * Attention: MLC 只做数据块区不存在翻译页更新
