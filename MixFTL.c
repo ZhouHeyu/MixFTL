@@ -351,7 +351,8 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		}
 	}else{
 		free_SLC_page_no[small] = 0;
-	}    		
+	} 
+	printf("s_psn %d\n",s_psn);
 	s_psn = S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]);
 	
 	if(s_psn % S_SECT_NUM_PER_PAGE!= 0){
