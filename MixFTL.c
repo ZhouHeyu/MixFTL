@@ -344,13 +344,13 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	if(free_SLC_page_no[small] >= S_SECT_NUM_PER_BLK){
 		if ((free_SLC_blk_no[small] = SLC_nand_get_free_blk(0)) == -1) {
 			int j = 0;
-		while (free_SLC_blk_num < SLC_min_fb_num){
-			j += SLC_gc_run(small, mapdir_flag);
-		}
+			while (free_SLC_blk_num < SLC_min_fb_num){
+				j += SLC_gc_run(small, mapdir_flag);
+			}
 			SLC_gc_get_free_blk(small, mapdir_flag);
+		}else{
+			free_SLC_page_no[small] = 0;
 		}
-	}else{
-		free_SLC_page_no[small] = 0;
 	}
 		
 	s_psn = S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]);
