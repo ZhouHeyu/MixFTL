@@ -382,6 +382,11 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		//Ð´ÈëÊý¾Ý
 		Mix_4K_mapdir[map_lpn].ppn = S_PAGE_NO_SECT(s_psn);
 		free_SLC_page_no[small] += S_SECT_NUM_PER_PAGE;
+#ifdef DEBUG
+		printf("after add :%d,\tfree SLC page no :%d\n",
+								S_SECT_NUM_PER_PAGE,
+								free_SLC_page_no[small]);
+#endif
 		sect_num = SLC_nand_page_write(s_psn, map_lsns, 0,  mapdir_flag);
 		ASSERT( sect_num == S_SECT_NUM_PER_PAGE );
 	}else{
