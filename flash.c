@@ -1703,9 +1703,9 @@ _u32 MLC_nand_get_free_blk (int isGC)
     if (MLC_nand_blk[i].state.free == 1) {
       flag1 = 1;
 
-      if ( MLC_nand_blk[i].state.ec < MIN_ERASE ) {
+      if ( MLC_nand_blk[i].state.ec < MLC_MIN_ERASE ) {
             blk_no = i;
-            MIN_ERASE = MLC_nand_blk[i].state.ec;
+            MLC_MIN_ERASE = MLC_nand_blk[i].state.ec;
             flag = 1;
       }
     }
@@ -1763,9 +1763,9 @@ _u32 SLC_nand_get_free_blk (int isGC)
     if (SLC_nand_blk[i].state.free == 1) {
       flag1 = 1;
 
-      if ( SLC_nand_blk[i].state.ec < MIN_ERASE ) {
+      if ( SLC_nand_blk[i].state.ec < SLC_MIN_ERASE ) {
             blk_no = i;
-            MIN_ERASE = SLC_nand_blk[i].state.ec;
+            SLC_MIN_ERASE = SLC_nand_blk[i].state.ec;
             flag = 1;
       }
     }
