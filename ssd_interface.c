@@ -403,11 +403,10 @@ int Mix_find_min_ghost_entry()
   int ghost_min = 0;
   int temp = 99999999;
 
-  for(i=0; i < MAP_REAL_MAX_ENTRIES; i++) {
+  for(i=0; i < MAP_GHOST_MAX_ENTRIES; i++) {
         if(Mix_4K_opagemap[ghost_arr[i]].map_age <= temp) {
             ghost_min = ghost_arr[i];
             temp = Mix_4K_opagemap[ghost_arr[i]].map_age;
-            index = i;
         }
   } 	
   return ghost_min;
