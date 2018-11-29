@@ -825,11 +825,12 @@ double MixFTL_Scheme(unsigned int secno,int scount, int operation)
 	}
 
 	if((Mix_4K_opagemap_num % MAP_ENTRIES_PER_PAGE) != 0){
-		Mix_page_num_for_2nd_map_table++;
+		Mix_page_num_for_2nd_map_table++;//every map page 2k
 	}
 
     blkno = secno / UPN_SECT_NUM_PER_PAGE;
-    blkno += Mix_page_num_for_2nd_map_table;
+	//都是基于数据大小，以4K
+    blkno += (int)(Mix_page_num_for_2nd_map_table * 1.0 / 2 + 0.5);
     bcount = (secno + scount -1)/UPN_SECT_NUM_PER_PAGE- (secno)/UPN_SECT_NUM_PER_PAGE + 1;
 	cnt = bcount;
 	while(cnt > 0){
