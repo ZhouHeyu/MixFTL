@@ -8,6 +8,8 @@
  * 
  */
 #ifndef _DFTL_H_
+#define _DFTL_H_
+
 #include "type.h"
 
 #define MAP_INVALID 1 
