@@ -231,6 +231,10 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
 	map_page_read ++ ;
   	sect_num = (size < S_SECT_NUM_PER_PAGE) ? size : S_SECT_NUM_PER_PAGE;
 	s_psn = Mix_4K_mapdir[ulpn].ppn * S_SECT_NUM_PER_PAGE;
+#ifdef DEBUG
+	printf("map-lsn :%d\tmap-ulpn :%d\t,s_psn:%d\n",lsn,ulpn,s_psn);
+#endif
+	
 	for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
 		map_lsns[i] = s_lsn + i;
 	}
