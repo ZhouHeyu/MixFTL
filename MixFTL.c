@@ -209,8 +209,8 @@ void Mix_opagemap_reset()
 size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
 {
   int i, sect_num, flag;
-  int ulpn = lsn / UPN_SECT_NUM_PER_PAGE; //logical page number based 4K;
-  int size_ulpn = size / UPN_SECT_NUM_PER_PAGE; //size in page based 4k
+  int ulpn ;
+  int size_ulpn;
   _u32  ppn;
   sect_t s_lsn;	// starting logical sector number
   sect_t s_psn; // starting physical sector number 
@@ -221,18 +221,17 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
   memset(map_lsns, 0xFF, sizeof(map_lsns));
   memset(data_lsns, 0xFF, sizeof(data_lsns));
   
-  ASSERT(ulpn < system_4K_opagemap_num);
-  ASSERT((ulpn + size_ulpn) < system_4K_opagemap_num);
-  
-  s_lsn = ulpn * UPN_SECT_NUM_PER_PAGE;
-  
   if (mapdir_flag == 2){
 //	翻译页的读取从SLC中读取,按2k对齐
 	map_page_read ++ ;
+	ulpn = lsn / S_SECT_NUM_PER_PAGE; //map logical page size is 2k
+	s_lsn = ulpn * S_SECT_NUM_PER_PAGE;
+	
   	sect_num = (size < S_SECT_NUM_PER_PAGE) ? size : S_SECT_NUM_PER_PAGE;
 	s_psn = Mix_4K_mapdir[ulpn].ppn * S_SECT_NUM_PER_PAGE;
+	
 #ifdef DEBUG
-	printf("map-lsn :%d\tmap-ulpn :%d\t,s_psn:%d\n",lsn,ulpn,s_psn);
+	printf("map-lsn :%d\tmap-ulpn :%d\ts_psn:%d\n",lsn,ulpn,s_psn);
 #endif
 	
 	for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
@@ -243,7 +242,14 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
 	ASSERT( size == S_SECT_NUM_PER_PAGE );
 
   }else{
-//  数据页的地址伴随统一地址转化  
+//  数据页的地址伴随统一地址转化
+	ulpn = lsn / UPN_SECT_NUM_PER_PAGE; //logical page number based 4K;
+	size_ulpn = size / UPN_SECT_NUM_PER_PAGE; //size in page based 4k
+	s_lsn = ulpn * UPN_SECT_NUM_PER_PAGE;
+
+	ASSERT(ulpn < system_4K_opagemap_num);
+  	ASSERT((ulpn + size_ulpn) < system_4K_opagemap_num);
+	
   	sect_num = (size < UPN_SECT_NUM_PER_PAGE) ? size : UPN_SECT_NUM_PER_PAGE;
 	ppn = Mix_4K_opagemap[ulpn].ppn ;
 	for(i=0; i < UPN_SECT_NUM_PER_PAGE; i++){
