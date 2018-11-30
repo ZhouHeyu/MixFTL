@@ -1216,7 +1216,8 @@ int SLC_nand_oob_read(_u32 psn)
 {
   blk_t pbn = S_BLK_F_SECT(psn);	// physical block number	
   _u16  pin = S_IND_F_SECT(psn);	// page index (within the block), here page index is the same as sector index
-  _u16  i, valid_flag = 0;
+  _u16  i; 
+  int valid_flag = 0;
 
   ASSERT(pbn < nand_SLC_blk_num);	// pbn shouldn't exceed max nand block number 
 
@@ -1256,7 +1257,8 @@ int MLC_nand_oob_read(_u32 psn)
 {
   blk_t pbn = M_BLK_F_SECT(psn);	// physical block number	
   _u16  pin = M_IND_F_SECT(psn);	// page index (within the block), here page index is the same as sector index
-  _u16  i, valid_flag = 0;
+  _u16  i;
+  int valid_flag = 0;
 
   ASSERT(pbn < nand_MLC_blk_num);	// pbn shouldn't exceed max nand block number 
 
