@@ -1458,7 +1458,9 @@ _u8 SLC_nand_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag)
   int i, valid_sect_num = 0;
 
 #ifdef DEBUG
-  printf("pbn %d\n",pbn);
+  if(map_flag == 2){
+  	printf("map write pbn %d\n",pbn);
+  }
 #endif
 
   if(pbn >= nand_SLC_blk_num){
