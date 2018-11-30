@@ -614,6 +614,7 @@ int SLC_map_gc_run(int victim_blk_no)
 	int s,k,q,i,j;
 	int valid_flag,valid_sect_num;
 	_u32 copy[S_SECT_NUM_PER_PAGE],copy_lsn[S_SECT_NUM_PER_PAGE];
+	_u32 s_ppn,old_s_psn;
 	
 	memset(copy, 0xFF, sizeof(copy));
 	memset(copy_lsn, 0xFF, sizeof(copy_lsn));
@@ -648,10 +649,26 @@ int SLC_map_gc_run(int victim_blk_no)
           		k++;
         	}
 //		’“µΩø’œ–∑≠“Î“≥		
-			benefit += SLC_gc_get_free_blk(small, 2);
-			Mix_4K_mapdir[(copy_lsn[s]/S_SECT_NUM_PER_PAGE)].ppn  = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]));
-			SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[small],free_SLC_page_no[small]) & (~S_OFF_MASK_SECT), copy_lsn, 1, 2);
-			free_SLC_page_no[small] += S_SECT_NUM_PER_PAGE;
+			benefit += SLC_gc_get_free_blk(0, 2);
+			s_ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
+#ifdef DEBUG
+			printf("free-SLC(map)-blk:%d\ page index\n",free_SLC_blk_no[0], free_SLC_page_no[0]);
+			if(free_SLC_page_no[0] > 0 && SLC_nand_blk[free_SLC_blk_no[0]].page_status[0]!=1){
+				printf("SLC  nand blk free page status must 1");
+				assert(0);
+			}
+#endif
+		//‘≠Œª÷√∑≠“Î“≥Œﬁ–ßªØ
+			old_s_psn = Mix_4K_mapdir[(copy_lsn[0]/S_SECT_NUM_PER_PAGE)].ppn * S_SECT_NUM_PER_PAGE;
+			for(q=0 ; q< S_SECT_NUM_PER_PAGE; q++){
+				SLC_nand_invalidate( old_s_psn+q, copy_lsn+q);
+			}
+			nand_stat(SLC_OOB_WRITE);
+			
+			Mix_4K_mapdir[(copy_lsn[0]/S_SECT_NUM_PER_PAGE)].ppn  = s_ppn;
+
+			SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[0],free_SLC_page_no[0]) & (~S_OFF_MASK_SECT), copy_lsn, 1, 2);
+			free_SLC_page_no[0] += S_SECT_NUM_PER_PAGE;
 			
         }
 		
