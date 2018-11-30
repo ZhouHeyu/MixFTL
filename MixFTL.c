@@ -18,6 +18,9 @@
 struct Momap_dir * Mix_4K_mapdir;
 int map_page_read=0;
 
+#ifdef DEBUG
+static int debug_count = 0;
+#endif
 blk_t extra_blk_num;
 
 // 1:data blk 0:translate blk
@@ -331,7 +334,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 {
 	int i;
 	int sect_num;
-	int small,map_lpn; 
+	int small,map_lpn;
 	sect_t s_lsn; // starting logical sector number
 	sect_t s_psn; // starting physical sector number 
 	sect_t s_psn1;
@@ -436,6 +439,13 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 			Mix_4K_opagemap[data_lpn].free = 0;
 		}
 		//Ð´ÈëÊý¾Ý
+#ifdef DEBUG
+        if(debug_count % 1000 == 0){
+          printf("data _lpn :%d\twrite to s-psn: %d\t ppn :%d\n",data_lpn,s_psn,s_psn/4);
+          debug_count = 0;
+        }
+        debug_count ++;
+#endif
 		Mix_4K_opagemap[data_lpn].ppn = s_psn >> S_SECT_BITS;
 		Mix_4K_opagemap[data_lpn].IsSLC = 1;
 		free_SLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
