@@ -579,8 +579,12 @@ int  SLC_gc_run(int small,int mapdir_flag)
 	int blk_type = 1;
 //	基于贪婪原则获取SLC的擦除块
 	victim_blk_no = SLC_opm_gc_cost_benefit();
-	blk_type = SLC_nand_blk[victim_blk_no].page_status[0];//0:data 1:map
-	
+//  确认选择的块是否写满
+	if( SLC_nand_blk[victim_blk_no].fpc !=0 ){
+		printf("SLC select victim blk no not write full\n");
+		assert(0);
+	}
+	blk_type = SLC_nand_blk[victim_blk_no].page_status[0];//0:data 1:map	
 	if( blk_type == 1 ){
 		benefit = SLC_map_gc_run(victim_blk_no);
 	}else if (blk_type == 0){
