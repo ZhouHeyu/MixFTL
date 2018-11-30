@@ -374,6 +374,16 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 //	将旧的数据标记为无效,这里做区分处理(数据页和翻译页)
 	if(mapdir_flag == 2 ){
 		// 翻译页按2k对齐写入，map_lpn 相应逻辑地址也按2k地址
+#ifdef DEBUG
+		if(small !=0){
+			printf("map write small must is 0\n");
+			assert(0);
+		}
+		if( free_SLC_page_no[0]>0 && SLC_nand_blk[s_psn/4].page_status[0] != 1){
+			printf("map write free blk page status must is 1\n");
+			assert(0);
+		}
+#endif
 		int map_lpn = lsn / S_SECT_NUM_PER_PAGE;
 		s_lsn =  map_lpn * S_SECT_NUM_PER_PAGE ;
 		
@@ -389,6 +399,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		}
 		//写入数据
 		Mix_4K_mapdir[map_lpn].ppn = s_psn >> S_SECT_BITS;
+		
 		
 		free_SLC_page_no[small] += S_SECT_NUM_PER_PAGE;
 		
