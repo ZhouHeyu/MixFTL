@@ -379,7 +379,10 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 			printf("map write small must is 0\n");
 			assert(0);
 		}
-		if( free_SLC_page_no[0]>0 && SLC_nand_blk[s_psn/4].page_status[0] != 1){
+		if( free_SLC_page_no[0]>0 && SLC_nand_blk[free_SLC_blk_no[0]].page_status[0] != 1){
+			printf("free slc page no %d\t page status:%d\n",
+											free_SLC_page_no[0],
+											SLC_nand_blk[free_SLC_blk_no[0]].page_status[0]);
 			printf("map write free blk page status must is 1\n");
 			assert(0);
 		}
