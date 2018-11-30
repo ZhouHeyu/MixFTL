@@ -331,7 +331,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 {
 	int i;
 	int sect_num;
-	int small; 
+	int small,map_lpn; 
 	sect_t s_lsn; // starting logical sector number
 	sect_t s_psn; // starting physical sector number 
 	sect_t s_psn1;
@@ -384,7 +384,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 			assert(0);
 		}
 #endif
-		int map_lpn = lsn / S_SECT_NUM_PER_PAGE;
+		map_lpn = lsn / S_SECT_NUM_PER_PAGE;
 		s_lsn =  map_lpn * S_SECT_NUM_PER_PAGE ;
 		
 		for(i=0 ; i < S_SECT_NUM_PER_PAGE ; i++){
