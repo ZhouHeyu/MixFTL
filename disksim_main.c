@@ -89,11 +89,15 @@ void warmFlash(char *tname){
 
   while(fgets(buffer, sizeof(buffer), fp)){
     sscanf(buffer, "%lf %d %d %d %d\n", &time, &devno, &blkno, &bcount, &flags);
-
-    bcount = ((blkno + bcount -1) / 4 - (blkno)/4 + 1) * 4;
-    blkno /= 4;
-    blkno *= 4;
-
+	if(ftl_type ==5){
+		bcount = ((blkno + bcount -1) / 8 - (blkno)/8 + 1) * 8;
+		blkno /= 8;
+    	blkno *= 8;
+	}else{		
+    	bcount = ((blkno + bcount -1) / 4 - (blkno)/4 + 1) * 4;
+    	blkno /= 4;
+    	blkno *= 4;
+	}
     delay = callFsim(blkno, bcount, 0);   
 
     for(i = blkno; i<(blkno+bcount); i++){ dm_table[i] = DEV_FLASH; }
@@ -103,6 +107,8 @@ void warmFlash(char *tname){
   if(ftl_type == 3) opagemap_reset(); 
 
   else if(ftl_type == 4) {
+    write_count = 0; read_count = 0; }
+  else if(ftl_type == 5) {
     write_count = 0; read_count = 0; }
 
   fclose(fp);
