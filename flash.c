@@ -1761,8 +1761,8 @@ _u32 SLC_nand_get_free_blk (int isGC)
   SLC_MIN_ERASE = 9999999;
   if ((isGC == 0) && (SLC_min_fb_num >= free_SLC_blk_num)) {
 #ifdef DEBUG 
-		  printf("SLC_min_fb_num: %d\n", SLC_min_fb_num);
-		  printf(" free SLC blk num: %d\n", free_SLC_blk_num);
+		  printf("SLC_min_fb_num: %d\t", SLC_min_fb_num);
+		  printf("free SLC blk num: %d\n", free_SLC_blk_num);
 #endif
     return -1;
   }
@@ -1793,7 +1793,9 @@ _u32 SLC_nand_get_free_blk (int isGC)
 
         free_SLC_blk_idx = blk_no;
         free_SLC_blk_num--;
-        printf("获取成功，块号：%d\n",blk_no);
+ #ifdef DEBUG
+        printf("Select free blkno %d to write\n",blk_no);
+#endif
         return blk_no;
   }
   else{

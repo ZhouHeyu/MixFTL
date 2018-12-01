@@ -53,8 +53,8 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag);
 
 
 int  SLC_gc_run(int small, int mapdir_flag);
-int SLC_data_gc_run(int victim_blk_no);
-int SLC_map_gc_run(int victim_blk_no);
+int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag);
+int SLC_map_gc_run(int victim_blk_no,int small,int mapdir_flag);
 
 int  MLC_gc_run(int small, int mapdir_flag);
 _u32 SLC_opm_gc_cost_benefit();
@@ -233,9 +233,6 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag)
   	sect_num = (size < S_SECT_NUM_PER_PAGE) ? size : S_SECT_NUM_PER_PAGE;
 	s_psn = Mix_4K_mapdir[ulpn].ppn * S_SECT_NUM_PER_PAGE;
 	
-#ifdef DEBUG
-	printf("map-lsn :%d\tmap-ulpn :%d\ts_psn:%d\n",lsn,ulpn,s_psn);
-#endif
 	
 	for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
 		map_lsns[i] = s_lsn + i;
@@ -444,6 +441,17 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		Mix_4K_opagemap[data_lpn].IsSLC = 1;
 		free_SLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
 		sect_num = SLC_nand_4K_data_page_write(s_psn, data_lsns, 0, mapdir_flag);
+ #ifdef DEBUG
+		for(i = 0; i < nand_SLC_blk_num;i++){
+			if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
+				continue;
+			}
+			if(SLC_nand_blk[i].state.free == 0 && SLC_nand_blk[i].fpc !=0){
+				printf("after 4K page write \ndebug warnning SLC nand blk %d no write full\n",i);
+				assert(0);
+			}
+		}
+ #endif
 		ASSERT( sect_num == UPN_SECT_NUM_PER_PAGE );
 	}
 	
@@ -604,9 +612,9 @@ int  SLC_gc_run(int small,int mapdir_flag)
 	}
 	blk_type = SLC_nand_blk[victim_blk_no].page_status[0];//0:data 1:map	
 	if( blk_type == 1 ){
-		benefit = SLC_map_gc_run(victim_blk_no);
+		benefit = SLC_map_gc_run(victim_blk_no,small,mapdir_flag);
 	}else if (blk_type == 0){
-		benefit = SLC_data_gc_run(victim_blk_no);
+		benefit = SLC_data_gc_run(victim_blk_no,small,mapdir_flag);
 	}else {
 		printf("SLC gc run blk_type must(1: map, 0: data)\n");
 		exit(0);
@@ -624,9 +632,9 @@ int  SLC_gc_run(int small,int mapdir_flag)
 * Function : 当SLC gc run回收的时候，进行调用，主要完成翻译块的数据页拷贝
 * Attention: 翻译页的大小为2k,和底层的SLC也大小一致
 **************************************/
-int SLC_map_gc_run(int victim_blk_no)
+int SLC_map_gc_run(int victim_blk_no,int small,int mapdir_flag)
 {
-	int small;
+	
 	int benefit = 0;
 	int merge_count = 0, pos = 0;
 	int s,k,q,i,j;
@@ -645,13 +653,14 @@ int SLC_map_gc_run(int victim_blk_no)
 		assert(0);
 	  }
 	}
-	small = 0;
+
 //	 确认写入块的偏移
 	s = k = S_OFF_F_SECT(free_SLC_page_no[small]);
 	if(!((s == 0) && (k == 0))){
 		printf("s && k should be 0\n");
 		exit(0);
 	}
+	small = 0;
 // 翻译页拷贝
 	for( i =0 ;i < S_PAGE_NUM_PER_BLK ; i++){
 
@@ -666,7 +675,7 @@ int SLC_map_gc_run(int victim_blk_no)
           		copy_lsn[k] = copy[j];
         	}
 //		找到空闲翻译页		
-			benefit += SLC_gc_get_free_blk(0, 2);
+			benefit += SLC_gc_get_free_blk(small, mapdir_flag);
 			s_ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
 #ifdef DEBUG
 			printf("free-SLC(map)-blk:%d\ page index\n",free_SLC_blk_no[0], free_SLC_page_no[0]);
@@ -719,9 +728,8 @@ int SLC_map_gc_run(int victim_blk_no)
 * Function : 当SLC gc run回收的时候，进行调用，主要完成数据块的数据页拷贝
 * Attention: 翻译页的大小为4k,为底层SLC的页大小的2倍
 *****************************************/
-int SLC_data_gc_run(int victim_blk_no)
+int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag)
 {
-	int small;
 	int benefit = 0;
 	int merge_count = 0, pos = 0;
 	int s,k,q,i,j;
@@ -749,13 +757,13 @@ int SLC_data_gc_run(int victim_blk_no)
 	  }
 	}
 	
-	small = 1;
 	//	 确认写入块的偏移
 	s = k = S_OFF_F_SECT(free_SLC_page_no[small]);
 	if(!((s == 0) && (k == 0))){
 		printf("s && k should be 0\n");
 		assert(0);
 	}
+	small = 1;
 	//数据页拷贝,注意数据页是按4k对齐
 	for(i = 0; i < S_PAGE_NUM_PER_BLK; i+=2){
 		valid_flag1 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE));
@@ -773,14 +781,15 @@ int SLC_data_gc_run(int victim_blk_no)
         	}
 
 //			确定空闲写入位置
-			benefit += SLC_gc_get_free_blk(small,1);
+			benefit += SLC_gc_get_free_blk(small,mapdir_flag);
+			
 			ASSERT(Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC == 1); //4k data
-			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]));
+			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[1], free_SLC_page_no[1]));
 			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC = 1;
 			
-            write_sect_num = SLC_nand_4K_data_page_write(S_SECTOR(free_SLC_blk_no[small],free_SLC_page_no[small]) & (~S_OFF_MASK_SECT), data_copy_lsn, 1, 1);
+            write_sect_num = SLC_nand_4K_data_page_write(S_SECTOR(free_SLC_blk_no[1],free_SLC_page_no[1]) & (~S_OFF_MASK_SECT), data_copy_lsn, 1, 1);
             ASSERT( write_sect_num == UPN_SECT_NUM_PER_PAGE);
-            free_SLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
+            free_SLC_page_no[1] += UPN_SECT_NUM_PER_PAGE;
 						
 //			判断翻译项是否存在CMT,延迟更新翻译项		
 			if((Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].map_status == MAP_REAL) 
@@ -794,7 +803,18 @@ int SLC_data_gc_run(int victim_blk_no)
 	
 		}//有效数据页拷贝
 	}//end--for
-
+	
+ #ifdef DEBUG
+		for(i = 0; i < nand_SLC_blk_num;i++){
+			if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
+				continue;
+			}
+			if(SLC_nand_blk[i].state.free == 0 && SLC_nand_blk[i].fpc !=0){
+				printf("after 4K page write \ndebug warnning SLC nand blk %d no write full\n",i);
+				assert(0);
+			}
+		}
+ #endif
 
 //	翻译页更新，确定哪些映射项同属一个翻译页一起更新
 	for(i=0;i < S_PAGE_NUM_PER_BLK/2;i++) {
@@ -841,7 +861,9 @@ int SLC_data_gc_run(int victim_blk_no)
 			SLC_nand_invalidate( Mix_4K_mapdir[map_lpn].ppn*S_SECT_NUM_PER_PAGE+m, map_copy[m]);
 		}
 		nand_stat(SLC_OOB_WRITE);
-
+		
+		benefit += SLC_gc_get_free_blk(0,mapdir_flag);
+		
 		Mix_4K_mapdir[map_lpn].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
 //		翻译页更新到SLC
 		SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[0],free_SLC_page_no[0]) & (~S_OFF_MASK_SECT), map_copy, 1, 2);
@@ -929,11 +951,11 @@ int  MLC_gc_run(int small, int mapdir_flag)
 //          MLC 只有数据页拷贝
 			ASSERT(MLC_nand_blk[victim_blk_no].page_status[i] == 0);
 			ASSERT(Mix_4K_opagemap[M_BLK_PAGE_NO_SECT(copy_lsn[0])].IsSLC == 0);
-			Mix_4K_opagemap[M_BLK_PAGE_NO_SECT(copy_lsn[0])].ppn = M_BLK_PAGE_NO_SECT(M_SECTOR(free_MLC_blk_no[small], free_MLC_page_no[small]));
+			Mix_4K_opagemap[M_BLK_PAGE_NO_SECT(copy_lsn[0])].ppn = M_BLK_PAGE_NO_SECT(M_SECTOR(free_MLC_blk_no[1], free_MLC_page_no[1]));
 			Mix_4K_opagemap[M_BLK_PAGE_NO_SECT(copy_lsn[0])].IsSLC = 0;
 
-            MLC_nand_page_write(M_SECTOR(free_MLC_blk_no[small],free_MLC_page_no[small]) & (~M_OFF_MASK_SECT), copy_lsn, 1, 1);
-            free_MLC_page_no[small] += M_SECT_NUM_PER_PAGE;
+            MLC_nand_page_write(M_SECTOR(free_MLC_blk_no[1],free_MLC_page_no[1]) & (~M_OFF_MASK_SECT), copy_lsn, 1, 1);
+            free_MLC_page_no[1] += M_SECT_NUM_PER_PAGE;
 			
 //			判断翻译项是否存在CMT,延迟更新翻译项		
             if((Mix_4K_opagemap[M_BLK_PAGE_NO_SECT(copy_lsn[s])].map_status == MAP_REAL) 
@@ -977,7 +999,7 @@ int  MLC_gc_run(int small, int mapdir_flag)
 	}
 //	更新SLC中的翻译页
 	for ( i=0; i < k; i++) {
-		if(free_SLC_blk_no[0] >= S_SECT_NUM_PER_PAGE) {
+		if(free_SLC_page_no[0] >= S_SECT_NUM_PER_PAGE) {
 			if((free_SLC_blk_no[0] = SLC_nand_get_free_blk(1)) == -1){
 				printf("we are in big trouble shudnt happen \n
 					In MLC data GC update--> SLC map free block is full\n");
@@ -993,11 +1015,11 @@ int  MLC_gc_run(int small, int mapdir_flag)
 			SLC_nand_invalidate( Mix_4K_mapdir[map_lpn].ppn*S_SECT_NUM_PER_PAGE+m, map_copy[m]);
 	    }
 		nand_stat(SLC_OOB_WRITE);
-
+		benefit += SLC_gc_get_free_blk(0 ,mapdir_flag);
 		Mix_4K_mapdir[map_lpn].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
 //		翻译页更新到SLC
 		SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[0],free_SLC_page_no[0]) & (~S_OFF_MASK_SECT), map_copy, 1, 2);
-		free_MLC_page_no[0] += M_SECT_NUM_PER_PAGE;
+		free_SLC_page_no[0] += S_SECT_NUM_PER_PAGE;
 	}
 //	统计合并次数
 	if(merge_count == 0 ) 
@@ -1082,6 +1104,18 @@ _u32 SLC_opm_gc_cost_benefit()
       max_blk = i;
     }
   }
+ #ifdef DEBUG
+	for(i = 0; i < nand_SLC_blk_num;i++){
+		if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
+			continue;
+		}
+		if(SLC_nand_blk[i].state.free == 0 && SLC_nand_blk[i].fpc !=0){
+			printf("debug warnning SLC nand blk %d no write full\n",i);
+			assert(0);
+		}
+	}
+
+ #endif
 
   ASSERT(max_blk != -1);
   ASSERT(SLC_nand_blk[max_blk].ipc > 0);
