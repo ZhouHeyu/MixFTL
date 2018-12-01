@@ -439,13 +439,7 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 			Mix_4K_opagemap[data_lpn].free = 0;
 		}
 		//写入数据
-#ifdef DEBUG
-        if(debug_count % 1000 == 0){
-          printf("data _lpn :%d\twrite to s-psn: %d\t ppn :%d\n",data_lpn,s_psn,s_psn/4);
-          debug_count = 0;
-        }
-        debug_count ++;
-#endif
+		
 		Mix_4K_opagemap[data_lpn].ppn = s_psn >> S_SECT_BITS;
 		Mix_4K_opagemap[data_lpn].IsSLC = 1;
 		free_SLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
@@ -670,7 +664,6 @@ int SLC_map_gc_run(int victim_blk_no)
 			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i] == 1);
         	for (j = 0 , k = 0; j < valid_sect_num; j++, k++) {
           		copy_lsn[k] = copy[j];
-          		k++;
         	}
 //		找到空闲翻译页		
 			benefit += SLC_gc_get_free_blk(0, 2);
@@ -685,7 +678,7 @@ int SLC_map_gc_run(int victim_blk_no)
 		//原位置翻译页无效化
 			old_s_psn = Mix_4K_mapdir[(copy_lsn[0]/S_SECT_NUM_PER_PAGE)].ppn * S_SECT_NUM_PER_PAGE;
 			for(q=0 ; q< S_SECT_NUM_PER_PAGE; q++){
-				SLC_nand_invalidate( old_s_psn+q, copy_lsn+q);
+				SLC_nand_invalidate( old_s_psn+q, copy_lsn[q]);
 			}
 			nand_stat(SLC_OOB_WRITE);
 			
@@ -733,6 +726,7 @@ int SLC_data_gc_run(int victim_blk_no)
 	int merge_count = 0, pos = 0;
 	int s,k,q,i,j;
 	int valid_flag1,valid_flag2,valid_sect_num;
+	int write_sect_num;
 	_u32 data_copy[UPN_SECT_NUM_PER_PAGE],data_copy_lsn[UPN_SECT_NUM_PER_PAGE];
 	_u32 map_copy[S_SECT_NUM_PER_PAGE];
 
@@ -767,16 +761,15 @@ int SLC_data_gc_run(int victim_blk_no)
 		valid_flag1 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE));
 		valid_flag2 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, (i+1) * S_SECT_NUM_PER_PAGE));
 //		连续2个SLC数据页都为有效，即4k数据有效		
-		if( (valid_flag1 == 1) &&(valid_flag2 == 2)){
+		if( (valid_flag1 == 1) &&(valid_flag2 == 1)){
 			merge_count++ ;
 			valid_sect_num = SLC_nand_4K_data_page_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE), data_copy, 1);
 			ASSERT( valid_sect_num == UPN_SECT_NUM_PER_PAGE);
-			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i] == 1);
-			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i+1] == 1);
+			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i] == 0);//0:data 1:map
+			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i+1] == 0);
 
         	for (j = 0 , k = 0; j < valid_sect_num; j++, k++) {
           		data_copy_lsn[k] = data_copy[j];
-          		k++;
         	}
 
 //			确定空闲写入位置
@@ -785,7 +778,8 @@ int SLC_data_gc_run(int victim_blk_no)
 			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[small], free_SLC_page_no[small]));
 			Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC = 1;
 			
-            SLC_nand_4K_data_page_write(S_SECTOR(free_SLC_blk_no[small],free_SLC_page_no[small]) & (~S_OFF_MASK_SECT), data_copy_lsn, 1, 1);
+            write_sect_num = SLC_nand_4K_data_page_write(S_SECTOR(free_SLC_blk_no[small],free_SLC_page_no[small]) & (~S_OFF_MASK_SECT), data_copy_lsn, 1, 1);
+            ASSERT( write_sect_num == UPN_SECT_NUM_PER_PAGE);
             free_SLC_page_no[small] += UPN_SECT_NUM_PER_PAGE;
 						
 //			判断翻译项是否存在CMT,延迟更新翻译项		
@@ -851,7 +845,7 @@ int SLC_data_gc_run(int victim_blk_no)
 		Mix_4K_mapdir[map_lpn].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
 //		翻译页更新到SLC
 		SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[0],free_SLC_page_no[0]) & (~S_OFF_MASK_SECT), map_copy, 1, 2);
-		free_MLC_page_no[0] += M_SECT_NUM_PER_PAGE;
+		free_SLC_page_no[0] += S_SECT_NUM_PER_PAGE;
 	}
 
 	//	统计合并次数
