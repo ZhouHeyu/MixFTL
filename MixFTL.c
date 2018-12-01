@@ -659,7 +659,7 @@ int SLC_map_gc_run(int victim_blk_no)
 		exit(0);
 	}
 // 翻译页拷贝
-	for( i =0 ;i < S_SECT_NUM_PER_PAGE ; i++){
+	for( i =0 ;i < S_PAGE_NUM_PER_BLK ; i++){
 
 		valid_flag = SLC_nand_oob_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE));
 //      翻译页有效
@@ -763,7 +763,7 @@ int SLC_data_gc_run(int victim_blk_no)
 		assert(0);
 	}
 	//数据页拷贝,注意数据页是按4k对齐
-	for(i = 0; i < S_SECT_NUM_PER_PAGE; i+=2){
+	for(i = 0; i < S_PAGE_NUM_PER_BLK; i+=2){
 		valid_flag1 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE));
 		valid_flag2 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, (i+1) * S_SECT_NUM_PER_PAGE));
 //		连续2个SLC数据页都为有效，即4k数据有效		
