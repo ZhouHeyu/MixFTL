@@ -1323,7 +1323,9 @@ void SLC_nand_erase (_u32 blk_no)
   for(i = 0; i < S_PAGE_NUM_PER_BLK; i++){
     SLC_nand_blk[blk_no].page_status[i] = -1;
   }
-  printf("²Á³ýµÄ¿éºÅ£½%d\n",blk_no);
+#ifdef DEBUG
+  printf("erase blk:%d\n",blk_no);
+#endif
   free_SLC_blk_num++;
 
   nand_stat(SLC_BLOCK_ERASE);
