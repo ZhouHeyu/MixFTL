@@ -87,7 +87,7 @@ DISKSIM_SRC = disksim.c disksim_intr.c disksim_pfsim.c \
         pagemap.c \
         ssd_interface.c \
         dftl.c \
-        fast.c MixFTL.c
+        fast.c MixFTL.c List.c
 
 DISKSIM_OBJ = $(DISKSIM_SRC:.c=.o)  
 
