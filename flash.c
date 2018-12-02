@@ -243,6 +243,8 @@ void nand_ecn_print(FILE * outFP)
 	
 }
 
+
+
 /*
 *add zhoujie 11-8
 * 统计全局块的平均块擦除次数
@@ -1009,7 +1011,7 @@ void Mix_nand_stat_print(FILE *outFP)
 	}
 	fprintf(outFP, "-----------MLC inner Wear level static----------\n");
 	for(i=0; i < nand_SLC_blk_num;i++){
-		fprintf(outFP,"MLCNAND BLKNO%d ECN :%d\n",i,SLC_nand_blk[i].state.ec);
+		fprintf(outFP,"MLCNAND BLKNO%d ECN :%d\n",i,MLC_nand_blk[i].state.ec);
 	}
 }
 
