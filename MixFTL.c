@@ -299,7 +299,7 @@ size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	  SLC_flag = 0;
 	}else{
 	  printf("something corrupted");
-	  exit(0);
+	  assert(0);
 	}
 	if( SLC_flag !=0 ){
 //  write to SLC
@@ -353,6 +353,13 @@ size_t SLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	
 //  确保有空白SLC块可以写入，若空白SLC块不够，则进行SLC被动垃圾回收
 	if(free_SLC_page_no[small] >= S_SECT_NUM_PER_BLK){
+#ifdef DEBUG
+		if(SLC_nand_blk[free_SLC_blk_no[small]].fpc > 0){
+			printf("debug is happend in  SLC opm write\n");
+			printf("small is %d\tSLC nand blk:%d\n",small,free_SLC_blk_no[small]);
+			assert(0);
+		}
+#endif
 		if ((free_SLC_blk_no[small] = SLC_nand_get_free_blk(0)) == -1) {
 			int j = 0;
 			while (free_SLC_blk_num < SLC_min_fb_num){
@@ -560,6 +567,13 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 int SLC_gc_get_free_blk(int small, int mapdir_flag)
 {
   if (free_SLC_page_no[small] >= S_SECT_NUM_PER_BLK) {
+#ifdef DEBUG
+	if (SLC_nand_blk[free_SLC_blk_no[small]].fpc > 0){
+		printf("free_SLC_blk_no[%d] :%d\n",small,free_SLC_blk_no[small]);
+		printf("SLC_nand_blk[%d].fpc is %d\n",free_SLC_blk_no[small],SLC_nand_blk[free_SLC_blk_no[small]].fpc);
+		assert(0);
+	}
+#endif
 	free_SLC_blk_no[small] =  SLC_nand_get_free_blk(1);
     free_SLC_page_no[small] = 0;
     return -1;
@@ -606,10 +620,12 @@ int  SLC_gc_run(int small,int mapdir_flag)
 //	基于贪婪原则获取SLC的擦除块
 	victim_blk_no = SLC_opm_gc_cost_benefit();
 //  确认选择的块是否写满
+#ifdef DEBUG
 	if( SLC_nand_blk[victim_blk_no].fpc !=0 ){
 		printf("SLC select victim blk no not write full\n");
 		assert(0);
 	}
+#endif 
 	blk_type = SLC_nand_blk[victim_blk_no].page_status[0];//0:data 1:map	
 	if( blk_type == 1 ){
 		benefit = SLC_map_gc_run(victim_blk_no,small,mapdir_flag);
@@ -617,7 +633,7 @@ int  SLC_gc_run(int small,int mapdir_flag)
 		benefit = SLC_data_gc_run(victim_blk_no,small,mapdir_flag);
 	}else {
 		printf("SLC gc run blk_type must(1: map, 0: data)\n");
-		exit(0);
+		assert(0);
 	}
 	
 	return benefit;
@@ -658,7 +674,7 @@ int SLC_map_gc_run(int victim_blk_no,int small,int mapdir_flag)
 	s = k = S_OFF_F_SECT(free_SLC_page_no[small]);
 	if(!((s == 0) && (k == 0))){
 		printf("s && k should be 0\n");
-		exit(0);
+		assert(0);
 	}
 	small = 0;
 // 翻译页拷贝
@@ -678,7 +694,6 @@ int SLC_map_gc_run(int victim_blk_no,int small,int mapdir_flag)
 			benefit += SLC_gc_get_free_blk(small, mapdir_flag);
 			s_ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
 #ifdef DEBUG
-			printf("free-SLC(map)-blk:%d\ page index\n",free_SLC_blk_no[0], free_SLC_page_no[0]);
 			if(free_SLC_page_no[0] > 0 && SLC_nand_blk[free_SLC_blk_no[0]].page_status[0]!=1){
 				printf("SLC  nand blk free page status must 1");
 				assert(0);
@@ -779,6 +794,14 @@ int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag)
         	for (j = 0 , k = 0; j < valid_sect_num; j++, k++) {
           		data_copy_lsn[k] = data_copy[j];
         	}
+		
+#ifdef DEBUG
+		if(free_SLC_page_no[1] >= S_SECT_NUM_PER_BLK && SLC_nand_blk[free_SLC_blk_no[1]].fpc > 0){
+			printf("free SLC page no[1] :%d\t",free_SLC_page_no[1]);
+			printf("free SLC blk no[1] :%d fpc is :%d\n",free_SLC_blk_no[1],SLC_nand_blk[free_SLC_blk_no[1]].fpc);
+			assert(0);
+		}
+#endif
 
 //			确定空闲写入位置
 			benefit += SLC_gc_get_free_blk(small,mapdir_flag);
@@ -803,18 +826,6 @@ int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag)
 	
 		}//有效数据页拷贝
 	}//end--for
-	
- #ifdef DEBUG
-		for(i = 0; i < nand_SLC_blk_num;i++){
-			if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
-				continue;
-			}
-			if(SLC_nand_blk[i].state.free == 0 && SLC_nand_blk[i].fpc !=0){
-				printf("after 4K page write \ndebug warnning SLC nand blk %d no write full\n",i);
-				assert(0);
-			}
-		}
- #endif
 
 //	翻译页更新，确定哪些映射项同属一个翻译页一起更新
 	for(i=0;i < S_PAGE_NUM_PER_BLK/2;i++) {
@@ -845,7 +856,7 @@ int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag)
 	}
 //	更新SLC中的翻译页
 	for ( i=0; i < k; i++) {
-		if(free_SLC_blk_no[0] >= S_SECT_NUM_PER_PAGE) {
+		if(free_SLC_page_no[0] >= S_SECT_NUM_PER_BLK) {
 			if((free_SLC_blk_no[0] = SLC_nand_get_free_blk(1)) == -1){
 				printf("we are in big trouble shudnt happen \n
 					In SLC data GC update--> SLC map free block is full\n");
@@ -885,6 +896,19 @@ int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag)
 	SLC_nand_erase(victim_blk_no);
 	//	此处插入磨损均衡代码
 	
+#ifdef DEBUG
+		for(i = 0; i < nand_SLC_blk_num;i++){
+			if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
+				continue;
+			}
+			if(SLC_nand_blk[i].state.free == 0 && SLC_nand_blk[i].fpc !=0){
+				printf("after 4K page write \ndebug warnning SLC nand blk %d no write full\n",i);
+				assert(0);
+			}
+		}
+ #endif
+	
+	
 	return 0;
 }
 
@@ -918,7 +942,7 @@ int  MLC_gc_run(int small, int mapdir_flag)
   	s = k = M_OFF_F_SECT(free_MLC_page_no[small]);
   	if(!((s == 0) && (k == 0))){
     	printf("s && k should be 0\n");
-    	exit(0);
+    	assert(0);
   	}
 //   确保数据区的所有数据页都为数据页状态
 	for( q = 0; q < M_PAGE_NUM_PER_BLK; q++){

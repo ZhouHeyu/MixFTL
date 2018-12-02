@@ -631,7 +631,7 @@ _u8 nand_page_read(_u32 psn, _u32 *lsns, _u8 isGC)
       }
       else{
         printf("lsns[%d]: %d shouldn't be -1\n", i, lsns[i]);
-        exit(0);
+        assert( lsns[i] != -1);
       }
     }
   }
@@ -1091,7 +1091,7 @@ _u8 SLC_nand_page_read(_u32 psn, _u32 *lsns, _u8 isGC)
       }
       else{
         printf("lsns[%d]: %d shouldn't be -1\n", i, lsns[i]);
-        exit(0);
+        assert( lsns[i] != -1);
       }
     }
   }
@@ -1655,6 +1655,7 @@ _u8 SLC_nand_4K_data_page_read(_u32 psn, _u32 *lsns, _u8 isGC)
     printf("psn: %d, pbn: %d, nand_SLC_blk_num: %d\n", psn, pbn, nand_SLC_blk_num);
   }
 
+
   ASSERT(S_OFF_F_SECT(psn) == 0);
   if(SLC_nand_blk[pbn].state.free != 0) {
     for( i =0 ; i < nand_SLC_blk_num ; i++){
@@ -1668,13 +1669,25 @@ _u8 SLC_nand_4K_data_page_read(_u32 psn, _u32 *lsns, _u8 isGC)
   }
 
   ASSERT(SLC_nand_blk[pbn].state.free == 0);	// block should be written with something
-  for(j=0; j < 2 ; j++){
-  	temp_psn += j * S_SECT_NUM_PER_PAGE;
-  	temp_valid_sect_num = SLC_nand_page_read( temp_psn, copy_lsns, isGC);
-  	for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
-		lsns[ j * S_SECT_NUM_PER_PAGE + i ] = copy_lsns[i];
-  	}
-	valid_sect_num += temp_valid_sect_num;
+  if(isGC == 0){
+	  //lsns curr is valid lsn data
+	  for(j=0; j<2 ;j++){
+		temp_psn += j * S_SECT_NUM_PER_PAGE;
+		for(i=0; i < S_SECT_NUM_PER_PAGE;i++){
+			copy_lsns[i] = lsns[ j * S_SECT_NUM_PER_PAGE + i ];
+		}
+		temp_valid_sect_num = SLC_nand_page_read( temp_psn, copy_lsns, isGC);
+		valid_sect_num += temp_valid_sect_num;
+	  }
+  }else{
+	for(j=0; j < 2 ; j++){
+		temp_psn += j * S_SECT_NUM_PER_PAGE;
+		temp_valid_sect_num = SLC_nand_page_read( temp_psn, copy_lsns, isGC);
+		for(i=0; i < S_SECT_NUM_PER_PAGE; i++){
+			lsns[ j * S_SECT_NUM_PER_PAGE + i ] = copy_lsns[i];
+		}
+		valid_sect_num += temp_valid_sect_num;
+	}
   }
 
   return valid_sect_num;
