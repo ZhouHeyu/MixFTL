@@ -857,8 +857,8 @@ double MixFTL_Scheme(unsigned int secno,int scount, int operation)
 		}
 		else
 		 	read_count++;
-		//调测阶段所有的写往SLC  
-    	send_flash_request(blkno*UPN_SECT_NUM_PER_PAGE, UPN_SECT_NUM_PER_PAGE, operation, 1); 
+		//data to storage in MLC
+    	send_flash_request(blkno*UPN_SECT_NUM_PER_PAGE, UPN_SECT_NUM_PER_PAGE, operation, 0); 
 		blkno++;
 	}
 	

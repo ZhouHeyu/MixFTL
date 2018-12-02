@@ -523,7 +523,6 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 	}
 //	将旧的数据标记为无效
 	if(Mix_4K_opagemap[data_lpn].free == 0){
-		
 		if(Mix_4K_opagemap[data_lpn].IsSLC == 1){ //SLC
 			s_psn1 = Mix_4K_opagemap[data_lpn].ppn * S_SECT_NUM_PER_PAGE;
 			for(i=0; i < S_SECT_NUM_PER_PAGE*2 ; i++){
@@ -593,6 +592,13 @@ int SLC_gc_get_free_blk(int small, int mapdir_flag)
 int MLC_gc_get_free_blk(int small, int mapdir_flag)
 {
   if (free_MLC_page_no[small] >= M_SECT_NUM_PER_BLK) {
+#ifdef DEBUG
+	if(MLC_nand_blk[free_MLC_blk_no[small]].fpc >0){
+		printf("free_MLC_blk_no[%d]:%d not write full\n",small,free_MLC_blk_no[small]);
+		printf("MLC nand blk %d fpc is %d\n",free_MLC_blk_no[small],MLC_nand_blk[free_MLC_blk_no[small]].fpc);
+		assert(0);
+	}
+#endif
 	free_MLC_blk_no[small] =  MLC_nand_get_free_blk(1);
     free_MLC_page_no[small] = 0;
     return -1;
@@ -1023,7 +1029,7 @@ int  MLC_gc_run(int small, int mapdir_flag)
 	}
 //	更新SLC中的翻译页
 	for ( i=0; i < k; i++) {
-		if(free_SLC_page_no[0] >= S_SECT_NUM_PER_PAGE) {
+		if(free_SLC_page_no[0] >= S_SECT_NUM_PER_BLK) {
 			if((free_SLC_blk_no[0] = SLC_nand_get_free_blk(1)) == -1){
 				printf("we are in big trouble shudnt happen \n
 					In MLC data GC update--> SLC map free block is full\n");

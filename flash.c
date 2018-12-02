@@ -1717,7 +1717,7 @@ _u32 MLC_nand_get_free_blk (int isGC)
   if ((isGC == 0) && ( MLC_min_fb_num >= free_MLC_blk_num)) {
 #ifdef DEBUG 
     printf("MLC_min_fb_num: %d\n", MLC_min_fb_num);
-    printf(" free MLC blk num: %d\n", free_MLC_blk_num);
+    printf("free MLC blk num: %d\n", free_MLC_blk_num);
 #endif
 	return -1;
   }
