@@ -20,6 +20,7 @@ int map_page_read=0;
 
 #ifdef DEBUG
 static int debug_count = 0;
+static int SLC_gc_last_p = 0;
 #endif
 blk_t extra_blk_num;
 
@@ -623,6 +624,27 @@ int  SLC_gc_run(int small,int mapdir_flag)
 	int benefit = 0;
 	blk_t victim_blk_no;
 	int blk_type = 1;
+	int i;
+#ifdef DEBUG
+	int slc_curr_free_blk_cnt = 0;
+	for(i =0 ;i < nand_SLC_blk_num;i++){
+		if(SLC_nand_blk[i].state.free == 1){
+			slc_curr_free_blk_cnt ++;
+		}
+	}
+	if(slc_curr_free_blk_cnt > SLC_min_fb_num){
+		printf("slc gc run is debug\n");
+		assert(0);
+	}
+	/*
+	for(i =0 ;i < nand_SLC_blk_num;i++){
+		printf("SLC nand blk %d fpc is %d\t ipc is %d\n",i,SLC_nand_blk[i].fpc,SLC_nand_blk[i].ipc);
+	}
+	assert(0);
+	*/
+#endif
+	
+	
 //	基于贪婪原则获取SLC的擦除块
 	victim_blk_no = SLC_opm_gc_cost_benefit();
 //  确认选择的块是否写满
@@ -1120,7 +1142,32 @@ _u32 SLC_opm_gc_cost_benefit()
   int blk_cb;
 
   _u32 max_blk = -1, i;
-
+  int loop_cnt = 0;
+  
+  while(1){
+	if( SLC_gc_last_p >= nand_SLC_blk_num){
+		SLC_gc_last_p = 0;
+	}
+	if( SLC_gc_last_p == free_SLC_blk_no[1] || SLC_gc_last_p == free_SLC_blk_no[0]){
+	  SLC_gc_last_p ++;
+      continue;
+    }
+    blk_cb = SLC_nand_blk[SLC_gc_last_p].ipc;
+    if( blk_cb > max_cb){
+		max_cb = blk_cb;
+		max_blk = SLC_gc_last_p;
+	}
+	if(max_cb == S_SECT_NUM_PER_BLK || loop_cnt == nand_SLC_blk_num +3){
+		// save point
+		SLC_gc_last_p = max_blk;
+		break;
+	}
+	
+	SLC_gc_last_p ++;
+	loop_cnt ++;
+	
+  }
+/*
   for (i = 0; i < nand_SLC_blk_num; i++) {
     if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
       continue;
@@ -1134,6 +1181,7 @@ _u32 SLC_opm_gc_cost_benefit()
       max_blk = i;
     }
   }
+ */
  #ifdef DEBUG
 	for(i = 0; i < nand_SLC_blk_num;i++){
 		if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
