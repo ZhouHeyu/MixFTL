@@ -270,10 +270,17 @@ void printWearout()
 
 void endFlash()
 {
-  nand_stat_print(outputfile);
-  nand_ecn_print(outputfile);
-  ftl_op->end;
-  nand_end();
+	if(ftl_type == 5){
+// mix nand end
+		Mix_nand_stat_print(outputfile);
+		ftl_op->end;
+		Mix_nand_end();
+	}else{
+		nand_stat_print(outputfile);
+		nand_ecn_print(outputfile);
+		ftl_op->end;
+		nand_end();
+	}
 }  
 
 /***********************************************************************
