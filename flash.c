@@ -1716,7 +1716,7 @@ _u32 MLC_nand_get_free_blk (int isGC)
   //in case that there is no avaible free block -> GC should be called !
   if ((isGC == 0) && ( MLC_min_fb_num >= free_MLC_blk_num)) {
 #ifdef DEBUG 
-    printf("MLC_min_fb_num: %d\n", MLC_min_fb_num);
+    printf("MLC_min_fb_num: %d\t", MLC_min_fb_num);
     printf("free MLC blk num: %d\n", free_MLC_blk_num);
 #endif
 	return -1;
@@ -1808,9 +1808,9 @@ _u32 SLC_nand_get_free_blk (int isGC)
 
         free_SLC_blk_idx = blk_no;
         free_SLC_blk_num--;
- #ifdef DEBUG
-        printf("Select free blkno %d to write\n",blk_no);
-#endif
+ //#ifdef DEBUG
+ //       printf("Select free blkno %d to write\n",blk_no);
+//#endif
         return blk_no;
   }
   else{

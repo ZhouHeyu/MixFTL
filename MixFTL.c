@@ -295,7 +295,7 @@ size_t Mopm_write(sect_t lsn,sect_t size,int mapdir_flag)
 
 	if(mapdir_flag <= 2 && mapdir_flag >= 1){ //write to SLC
 	  SLC_flag = 1;
-	}else if ( mapdir_flag == 1){//write to MLC
+	}else if ( mapdir_flag == 0){//write to MLC
 	  SLC_flag = 0;
 	}else{
 	  printf("something corrupted");
@@ -510,7 +510,7 @@ size_t MLC_opm_write(sect_t lsn,sect_t size,int mapdir_flag)
 		} 
 	}
 	
-	s_psn = S_SECTOR(free_MLC_blk_no[small], free_MLC_page_no[small]);
+	s_psn = M_SECTOR(free_MLC_blk_no[small], free_MLC_page_no[small]);
 	
 	if(s_psn % M_SECT_NUM_PER_PAGE!= 0){
 	  printf("s_psn: %d\n", s_psn);
