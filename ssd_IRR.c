@@ -132,7 +132,7 @@ int Find_Clean_Entry_In_ColdWCMT()
 int ColdWCMT_MaxCluster_WriteBack()
 {
 	Node * TempNode;
-	int curr_lpn, temp_index,temp_max;
+	int curr_lpn, temp_index,temp_max = -1;
 	int i;
 	
 	//将cluster_arr里的统计变量清零
