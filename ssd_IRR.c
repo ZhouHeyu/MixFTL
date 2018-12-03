@@ -6,7 +6,7 @@
 * email: 1395529361@qq.com
 * *********************************************************/
 #include "ssd_IRR.h"
-#inlcude "ssd_interface.h"
+#include "ssd_interface.h"
 
 //all map entry is 4096
 #define MAP_MAX_ENTRIES 4096
@@ -42,7 +42,7 @@ int wcmt_hot_len;
 int wcmt_cold_len;
 
 int ccw_len;
-int TPCS = －1; //init?
+int TPCS = -1;
 
 /**********************************
  *  		inner function
@@ -417,7 +417,7 @@ void IRRFTL_Move_RCMT2WCMT(blkno, operation)
         printf("wcmt_arr overflow (WRFTL_Move_RCMT2WCMT) lpn=%d\n",blkno);
         assert(0);
     }
-    if(wcmt_len > MAP_WCMT_MAX_ENTRIES){
+    if((wcmt_hot_len+wcmt_cold_len) > MAP_WCMT_MAX_ENTRIES){
         printf("wcmt_len > MAP_REAL_MAX_ENTRIES\n");
         assert(0);
     }
@@ -570,7 +570,7 @@ void IRRFTL_Hit_WCMT(int blkno, int operation)
     else{
         IRR_AddNewLPNInMRU(blkno, IRRFTL_WH_Head, gHotFlag); // 在冷区命中，将数据迁移至热区MRU，删除冷区数据
         wcmt_hot_len ++ ;
-        DeleteNodeInList(temp, IRRFTL_WC_Head);
+        DeleteNodeInList(ReqNode, IRRFTL_WC_Head);
         wcmt_cold_len --;
     }
     //load data or write data to MixSSD
@@ -643,7 +643,7 @@ void IRRFTL_Hit_TPCS(int blkno, int operation)
 void IRRFTL_NOT_Hit_CMT(int blkno,int operation)
 {
 	// 剔除TPCS中的原数据，并读取新翻译页
-	TPCS = (blkno - Mix_4K_page_num_for_2nd_map_table)/Mix_MAP_ENTRIES_PER_PAGE;
+	TPCS = (blkno - Mix_4K_page_num_for_2nd_map_table)/MIX_MAP_ENTRIES_PER_PAGE;
 	//read map page from SLC
     send_flash_request( TPCS*4, 4, 1, 2);
     if(operation==0)
@@ -667,30 +667,24 @@ void IRRFTL_NOT_Hit_CMT(int blkno,int operation)
 * return value: delay (operation flash delay)
 * Attention : 
 ***********************************************/
-void IRRFTL_Scheme(unsigned int secno,int scount, int operation)
+double IRRFTL_Scheme(unsigned int secno,int scount, int operation)
 {
 	int bcount;
 	int blkno; // pageno for page based FTL
 	double delay;
-	int cnt,z;
-	int debug_i,debug_j;
-	
-    //int Remain_Entries = 0;
-    //int i;
-    //double Bw, Br;
-    //double Dw, Dr;
-    Node *Temp;
+	int cnt;
+    
     if(init_flag == 0){
 		IRRFTL_Init();
 	}
-	blkno = secno / UPN_SECT_NUM_PER_PAGE ＋ Mix_4K_page_num_for_2nd_map_table ;
+	blkno = (secno / UPN_SECT_NUM_PER_PAGE) + Mix_4K_page_num_for_2nd_map_table ;
 	bcount = (secno + scount -1)/UPN_SECT_NUM_PER_PAGE- (secno)/UPN_SECT_NUM_PER_PAGE + 1;
 	cnt = bcount;
 	while(cnt > 0){
 		cnt --;
 	/*******************正式进入仿真运行******************/
 	// 由于仿真初始，冷热队列都为0，需要处理。首先满足热队列，之后再判断冷队列。热队列小时，将迁移至热队列的都为热。冷队列小时，选择热队列最后一个，移到冷队列
-		if(wcmt_hot_len_len < IRRFTL_Hot_Min){
+		if(wcmt_hot_len < IRRFTL_Hot_Min){
 			gHotFlag = 1;
 		}else{
 			gHotFlag = 0;
@@ -715,7 +709,7 @@ void IRRFTL_Scheme(unsigned int secno,int scount, int operation)
 		// req_entry hit in RCMT
 			IRRFTL_Hit_RCMT(blkno,operation);
 			//~ ..... static value change
-		}else if( (blkno - Mix_4K_page_num_for_2nd_map_table)/Mix_MAP_ENTRIES_PER_PAGE == TPCS ){
+		}else if( (blkno - Mix_4K_page_num_for_2nd_map_table)/MIX_MAP_ENTRIES_PER_PAGE == TPCS ){
 		// req_entry hit in TPCS
 			IRRFTL_Hit_TPCS(blkno,operation);
 			//~ ..... static value change
@@ -725,7 +719,7 @@ void IRRFTL_Scheme(unsigned int secno,int scount, int operation)
 			//~ ..... static value change
 		}
 		blkno ++;
-		rqst_cnt ++;
+		
 	}//end-while
 	
     delay = calculate_delay_SLC_flash();

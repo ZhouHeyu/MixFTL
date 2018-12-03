@@ -7,7 +7,8 @@
  * Description: This is a header file for MixFTL.c. and related to dftl.h/dftl.c  
  * 
  */
-#ifndef _MIXDFTL_H_
+#ifndef _MIXFTL_H_
+#define _MIXFTL_H_
 #include "dftl.h"
 #include "type.h"
 

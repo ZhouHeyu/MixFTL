@@ -18,6 +18,7 @@
 #include "flash.h"
 #include "type.h"
 
+
 #define READ_DELAY        (0.1309/4)
 #define WRITE_DELAY       (0.4059/4)
 #define ERASE_DELAY       1.5 
@@ -88,6 +89,7 @@ int find_min_ghost_entry();
 void synchronize_disk_flash();
 void find_min_cache();
 int search_table(int *arr, int size, int val) ;
+int find_free_pos( int *arr, int size);
 double callFsim(unsigned int secno, int scount, int operation);
 /********Mix SSD function******/
 void reset_SLC_flash_stat();

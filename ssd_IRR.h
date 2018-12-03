@@ -13,6 +13,6 @@
 #include "flash.h"
 #include "MixFTL.h"
 
-double IRRFTL_Scheme(int *pageno, int *req_size, int operation);
+double IRRFTL_Scheme(unsigned int secno,int scount, int operation);
 
 #endif
