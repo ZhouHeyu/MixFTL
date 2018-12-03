@@ -1107,7 +1107,7 @@ _u32 MLC_opm_gc_cost_benefit()
   int max_cb = 0;
   int blk_cb;
 
-  _u32 max_blk = -1, i;
+  int max_blk = -1, i;
 
   for (i = 0; i < nand_MLC_blk_num; i++) {
     if(i == free_MLC_blk_no[1]){
@@ -1153,7 +1153,7 @@ _u32 SLC_opm_gc_cost_benefit()
       continue;
     }
     blk_cb = SLC_nand_blk[SLC_gc_last_p].ipc;
-    if( blk_cb > max_cb){
+    if( blk_cb >= max_cb){
 		max_cb = blk_cb;
 		max_blk = SLC_gc_last_p;
 	}
@@ -1167,6 +1167,7 @@ _u32 SLC_opm_gc_cost_benefit()
 	loop_cnt ++;
 	
   }
+  
 /*
   for (i = 0; i < nand_SLC_blk_num; i++) {
     if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
@@ -1176,7 +1177,7 @@ _u32 SLC_opm_gc_cost_benefit()
     blk_cb = SLC_nand_blk[i].ipc;
 
     
-    if (blk_cb > max_cb) {
+    if (blk_cb >= max_cb) {
       max_cb = blk_cb;
       max_blk = i;
     }
