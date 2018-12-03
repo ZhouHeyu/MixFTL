@@ -857,7 +857,7 @@ double MixFTL_Scheme(unsigned int secno,int scount, int operation)
 		}
 		else
 		 	read_count++;
-		//data to storage in MLC
+		//data to storage in MLC 0 -> to MLC 1-> SLC 
     	send_flash_request(blkno*UPN_SECT_NUM_PER_PAGE, UPN_SECT_NUM_PER_PAGE, operation, 0); 
 		blkno++;
 	}

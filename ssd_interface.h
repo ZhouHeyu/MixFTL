@@ -7,6 +7,8 @@
  * Description: This is a header file for ssd_interface.c.
  *
  */
+#ifndef _SSD_INTERFACE_H_
+#define _SSD_INTERFACE_H_
 
 #include <stdio.h>
 #include <string.h>
@@ -85,6 +87,7 @@ void find_real_min();
 int find_min_ghost_entry();
 void synchronize_disk_flash();
 void find_min_cache();
+int search_table(int *arr, int size, int val) ;
 double callFsim(unsigned int secno, int scount, int operation);
 /********Mix SSD function******/
 void reset_SLC_flash_stat();
@@ -155,6 +158,8 @@ int total_init_blk_num;
 
 //判读对应的块有多少页的映射项在CMT中
 int * nand_blk_bit_map;
+
+#endif
 
 
 
