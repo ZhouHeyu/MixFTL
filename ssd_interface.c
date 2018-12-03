@@ -34,6 +34,8 @@ int cache_hit, rqst_cnt;
 int flag1 = 1;
 int count = 0;
 
+//add zhoujie 12-2
+int mix_total_util_sect_num ;
 int page_num_for_2nd_map_table;
 // add zhoujie 11-27
 int Mix_page_num_for_2nd_map_table;
@@ -241,7 +243,9 @@ void Mix_initFlash()
 	
 	MLC_total_blk_num = total_sect_num /(M_SECT_NUM_PER_BLK);
 	MLC_total_util_blk_num = total_util_sect_num/(M_SECT_NUM_PER_BLK);
-	MLC_total_extr_blk_num = SLC_total_blk_num - SLC_total_util_blk_num;  
+	MLC_total_extr_blk_num = MLC_total_blk_num - MLC_total_util_blk_num;  
+	
+	mix_total_util_sect_num = SLC_total_util_blk_num*S_SECT_NUM_PER_BLK + MLC_total_util_blk_num * M_SECT_NUM_PER_BLK;
 
 	ASSERT(total_extr_blk_num != 0);
 	// min blk num
@@ -293,12 +297,19 @@ void send_flash_request(int start_blk_no, int block_cnt, int operation, int mapd
 	int size;
 	//size_t (*op_func)(sect_t lsn, size_t size);
 	size_t (*op_func)(sect_t lsn, size_t size, int mapdir_flag);
-
+	if(ftl_type == 5){	// Mix SSD 
+		if((start_blk_no + blk_cnt) >=  mix_total_util_sect_num ){
+			printf("start_blk_no: %d, block_cnt: %d, mix_total_util_sect_num: %d\n", 
+									start_blk_no, block_cnt, mix_total_util_sect_num);
+			assert(0);
+		}
+	}else{	
         if((start_blk_no + block_cnt) >= total_util_sect_num){
           printf("start_blk_no: %d, block_cnt: %d, total_util_sect_num: %d\n", 
-              start_blk_no, block_cnt, total_util_sect_num);
+									start_blk_no, block_cnt, total_util_sect_num);
           assert(0);
         }
+	}
 
 	switch(operation){
 

@@ -17,7 +17,7 @@
 #define MAP_WCMT 2
 #define MAP_RCMT 3
 #define MAP_TPCS 4
-
+static int rqst = 0;
 /************************************
  * 		global arr value 
  ************************************/
@@ -678,10 +678,14 @@ double IRRFTL_Scheme(unsigned int secno,int scount, int operation)
 		IRRFTL_Init();
 	}
 	blkno = (secno / UPN_SECT_NUM_PER_PAGE) + Mix_4K_page_num_for_2nd_map_table ;
-	bcount = (secno + scount -1)/UPN_SECT_NUM_PER_PAGE- (secno)/UPN_SECT_NUM_PER_PAGE + 1;
+	bcount = (secno + scount -1)/UPN_SECT_NUM_PER_PAGE - (secno)/UPN_SECT_NUM_PER_PAGE + 1;
 	cnt = bcount;
 	while(cnt > 0){
 		cnt --;
+#ifdef DEBUG
+		rqst ++;
+		printf("rqst %d \t secno:%d\t scoutn%d\n",rqst,secno,scount);
+#endif
 	/*******************正式进入仿真运行******************/
 	// 由于仿真初始，冷热队列都为0，需要处理。首先满足热队列，之后再判断冷队列。热队列小时，将迁移至热队列的都为热。冷队列小时，选择热队列最后一个，移到冷队列
 		if(wcmt_hot_len < IRRFTL_Hot_Min){
