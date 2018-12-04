@@ -266,8 +266,14 @@ void Mix_nand_stat_print(FILE *outFP);
 
 _u8 SLC_nand_4K_data_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag);
 _u8 SLC_nand_4K_data_page_read(_u32 psn, _u32 *lsns, _u8 isGC);
-
-
+/**************************
+ * Date :04.12.2018
+ * Author:zhoujie
+ * goal: to match IRRFTL when slc gc to check valid ppn is cold or hot
+ *************************/ 
+ //-1:not in cmt;0 in rcmt; 1 in cold-wcmt;2 in hot-wcmt
+extern int * SLC_ppn_status;
+int SLC_ppn_num;
 /*************Mix SSD add Function END*********************/
 
 _u32 free_SLC_blk_num;

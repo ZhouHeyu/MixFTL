@@ -45,6 +45,9 @@ double my_global_no_free_nand_blk_wear_ave;
 static int my_min_nand_wear_ave=1;
 _u8  pb_size;
 struct nand_blk_info *nand_blk;
+//-1:not in cmt;0 in rcmt; 1 in cold-wcmt;2 in hot-wcmt
+int * SLC_ppn_status;
+int SLC_ppn_num = -1;
 
 extern int SLC_to_SLC_num;
 extern int SLC_to_MLC_num;
@@ -867,10 +870,14 @@ int Mix_nand_init (_u32 SLC_blk_num,_u32 MLC_blk_num, _u8 min_free_blk_num)
 {
 	_u32 blk_no;
 	int i;
+	
 	Mix_nand_end();
+	SLC_ppn_num = SLC_blk_num * S_PAGE_NUM_PER_BLK;
 	SLC_nand_blk = (struct SLC_nand_blk_info *)malloc(sizeof (struct SLC_nand_blk_info) * SLC_blk_num);
 	MLC_nand_blk = (struct MLC_nand_blk_info *)malloc(sizeof (struct MLC_nand_blk_info) * MLC_blk_num);
-	if ((SLC_nand_blk == NULL)||(MLC_nand_blk == NULL)) 
+	SLC_ppn_status = (int *)malloc(sizeof(int) * SLC_ppn_num);
+
+	if ((SLC_nand_blk == NULL)||(MLC_nand_blk == NULL) || (SLC_ppn_status == NULL)) 
 	{
 		return -1;
 	}
@@ -878,6 +885,7 @@ int Mix_nand_init (_u32 SLC_blk_num,_u32 MLC_blk_num, _u8 min_free_blk_num)
 	head=tail=&SLC_nand_blk[0];
 	memset(SLC_nand_blk, 0xFF, sizeof (struct SLC_nand_blk_info) * SLC_blk_num);
 	memset(MLC_nand_blk, 0xFF, sizeof (struct MLC_nand_blk_info) * MLC_blk_num);
+	memset(SLC_ppn_status, -1 ,sizeof(int) * SLC_ppn_num);
 	
 	nand_SLC_blk_num = SLC_blk_num;
 	nand_MLC_blk_num = MLC_blk_num;
