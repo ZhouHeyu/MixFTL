@@ -2,8 +2,8 @@
 // Created by zj on 18-7-8.
 //
 
-#ifndef LIST_H
-#define LIST_H
+#ifndef _LIST_H_
+#define _LIST_H_
 //添加双链表的操作，主要涉及链表的插入，遍历，节点的删除
 #include <stdio.h>
 #include <stdlib.h>

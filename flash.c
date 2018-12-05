@@ -885,7 +885,7 @@ int Mix_nand_init (_u32 SLC_blk_num,_u32 MLC_blk_num, _u8 min_free_blk_num)
 	head=tail=&SLC_nand_blk[0];
 	memset(SLC_nand_blk, 0xFF, sizeof (struct SLC_nand_blk_info) * SLC_blk_num);
 	memset(MLC_nand_blk, 0xFF, sizeof (struct MLC_nand_blk_info) * MLC_blk_num);
-	memset(SLC_ppn_status, -1 ,sizeof(int) * SLC_ppn_num);
+	memset(SLC_ppn_status, -1 ,sizeof(int) * SLC_ppn_num); //-1:not in cmt;0 in rcmt; 1 in cold-wcmt;2 in hot-wcmt
 	
 	nand_SLC_blk_num = SLC_blk_num;
 	nand_MLC_blk_num = MLC_blk_num;
@@ -976,6 +976,8 @@ void Mix_nand_stat_reset()
   MLC_stat_read_num = MLC_stat_write_num = MLC_stat_erase_num = 0;
   MLC_stat_gc_read_num = MLC_stat_gc_write_num = 0;
   MLC_stat_oob_read_num = MLC_stat_oob_write_num = 0;
+  //add 12-4
+  SLC_to_MLC_num = SLC_to_SLC_num = 0;
 }
 
 /*
@@ -1005,12 +1007,12 @@ void Mix_nand_stat_print(FILE *outFP)
 	fprintf(outFP, " MLC_Page write (#): %8u	 ", MLC_stat_write_num);
 	fprintf(outFP,"-----------------------------------------------------------\n");
 	fprintf(outFP, " MLC_Block erase (#): %8u\n", MLC_stat_erase_num);
-	fprintf(outFP, " MLC__GC page read (#): %8u	", MLC_stat_gc_read_num);
+	fprintf(outFP, " MLC_GC page read (#): %8u	", MLC_stat_gc_read_num);
 	fprintf(outFP, " MLC_GC page write (#): %8u\n", MLC_stat_gc_write_num);
 	fprintf(outFP, "------------------------------------------------------------\n");
 	fprintf(outFP, "------------------------------------------------------------\n");
-	fprintf(outFP, " SLC_to_SLC_num (#): %8u	 ", SLC_to_SLC_num);
-	fprintf(outFP, " SLC_to_MLC_num (#): %8u\n", SLC_to_MLC_num);
+	fprintf(outFP, " SLC_to_SLC_num data page-4k (#): %8u	 ", SLC_to_SLC_num);
+	fprintf(outFP, " SLC_to_MLC_num data page-4k (#): %8u\n", SLC_to_MLC_num);
 	fprintf(outFP, "------------------------------------------------------------\n");
 	
 	fprintf(outFP, "-----------SLC inner Wear level static----------\n");

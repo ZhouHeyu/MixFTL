@@ -274,6 +274,8 @@ _u8 SLC_nand_4K_data_page_read(_u32 psn, _u32 *lsns, _u8 isGC);
  //-1:not in cmt;0 in rcmt; 1 in cold-wcmt;2 in hot-wcmt
 extern int * SLC_ppn_status;
 int SLC_ppn_num;
+int SLC_to_MLC_num;
+int SLC_to_SLC_num;
 /*************Mix SSD add Function END*********************/
 
 _u32 free_SLC_blk_num;

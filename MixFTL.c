@@ -55,6 +55,8 @@ size_t Mopm_read(sect_t lsn,sect_t size, int mapdir_flag);
 
 int  SLC_gc_run(int small, int mapdir_flag);
 int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag);
+// check SLC ppn status decide to move MLC
+int SLC_data_gc_run_extend(int victim_blk_no,int small,int mapdir_flag);
 int SLC_map_gc_run(int victim_blk_no,int small,int mapdir_flag);
 
 int  MLC_gc_run(int small, int mapdir_flag);
@@ -658,7 +660,8 @@ int  SLC_gc_run(int small,int mapdir_flag)
 	if( blk_type == 1 ){
 		benefit = SLC_map_gc_run(victim_blk_no,small,mapdir_flag);
 	}else if (blk_type == 0){
-		benefit = SLC_data_gc_run(victim_blk_no,small,mapdir_flag);
+		//benefit = SLC_data_gc_run(victim_blk_no,small,mapdir_flag);
+		benefit = SLC_data_gc_run_extend(victim_blk_no,small,mapdir_flag);
 	}else {
 		printf("SLC gc run blk_type must(1: map, 0: data)\n");
 		assert(0);
@@ -939,6 +942,190 @@ int SLC_data_gc_run(int victim_blk_no,int small,int mapdir_flag)
 	
 	return 0;
 }
+
+
+/************************************
+ * Name :int SLC_data_gc_run_extend
+ * Date :04.12.2018
+ * Author :zhoujie
+ * param :victim_blk_no(SLC blk num)
+ * 		  small(0:map 1:data)
+ * 		  mapdir_flag(2:map slc,1:data slc 0: mlc data)
+ * return value:
+ * function :this function will check SLC ppn is hot or cold
+ * 			 and move to MLC
+ * ************************************************/
+int SLC_data_gc_run_extend(int victim_blk_no,int small,int mapdir_flag)
+{
+	int benefit = 0;
+	int merge_count = 0, pos = 0;
+	int s,k,q,i,j;
+	int valid_flag1,valid_flag2,valid_sect_num;
+	int write_sect_num;
+	_u32 data_copy[UPN_SECT_NUM_PER_PAGE],data_copy_lsn[UPN_SECT_NUM_PER_PAGE];
+	_u32 map_copy[S_SECT_NUM_PER_PAGE];
+
+	int old_flag;
+	_u32 m,map_lpn;
+	int temp_arr[S_PAGE_NUM_PER_BLK/2],temp_arr1[S_PAGE_NUM_PER_BLK/2],map_arr[S_PAGE_NUM_PER_BLK/2]; 
+	int old_ppn,ppn_status = -1;
+	memset(data_copy, 0xFF, sizeof(data_copy));
+	memset(data_copy_lsn, 0xFF, sizeof(data_copy_lsn));
+	memset(map_copy,0xFF,sizeof(map_copy));
+	
+	for( q = 0; q  < S_PAGE_NUM_PER_BLK; q++) {
+	  if(SLC_nand_blk[victim_blk_no].page_status[q] == 1 ){
+	  	// data page status is 0
+		printf("something corrupted1=%d",victim_blk_no);
+		assert(0);
+	  }
+	}
+	
+	s = k = S_OFF_F_SECT(free_SLC_page_no[small]);
+	if(!((s == 0) && (k == 0))){
+		printf("s && k should be 0\n");
+		assert(0);
+	}
+	small = 1;
+	
+	for(i = 0; i < S_PAGE_NUM_PER_BLK; i+=2){
+		valid_flag1 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE));
+		valid_flag2 = SLC_nand_oob_read( S_SECTOR(victim_blk_no, (i+1) * S_SECT_NUM_PER_PAGE));
+//		SLC-data is valid and move		
+		if( (valid_flag1 == 1) &&(valid_flag2 == 1)){
+			merge_count++ ;
+			valid_sect_num = SLC_nand_4K_data_page_read( S_SECTOR(victim_blk_no, i * S_SECT_NUM_PER_PAGE), data_copy, 1);
+			ASSERT( valid_sect_num == UPN_SECT_NUM_PER_PAGE);
+			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i] == 0);//0:data 1:map
+			ASSERT( SLC_nand_blk[victim_blk_no].page_status[i+1] == 0);
+
+        	for (j = 0 , k = 0; j < valid_sect_num; j++, k++) {
+          		data_copy_lsn[k] = data_copy[j];
+        	}
+		
+			// check old - ppn relate lpn is hot and decide to move MLC
+			ASSERT(Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC == 1); //4k data
+			old_ppn = Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn ;
+			ASSERT(old_ppn < SLC_ppn_num);
+			ppn_status = SLC_ppn_status[old_ppn];//2 in wcmt-hot;1 wcmt-cold 0 :rcmt
+			if(ppn_status == 2){ //remain in slc
+				SLC_to_SLC_num ++;
+				benefit += SLC_gc_get_free_blk(small,mapdir_flag);
+				Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[1], free_SLC_page_no[1]));
+				Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC = 1;
+				write_sect_num = SLC_nand_4K_data_page_write(S_SECTOR(free_SLC_blk_no[1],free_SLC_page_no[1]) & (~S_OFF_MASK_SECT), data_copy_lsn, 1, 1);
+				ASSERT( write_sect_num == UPN_SECT_NUM_PER_PAGE);
+				free_SLC_page_no[1] += UPN_SECT_NUM_PER_PAGE;
+			}else{//write to MLC
+				SLC_to_MLC_num ++;
+				benefit += MLC_gc_get_free_blk(1,0);
+				Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].ppn = M_BLK_PAGE_NO_SECT(M_SECTOR(free_MLC_blk_no[1], free_MLC_page_no[1]));
+				Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].IsSLC = 0;
+				write_sect_num = MLC_nand_page_write(M_SECTOR(free_MLC_blk_no[1],free_MLC_page_no[1]) & (~M_OFF_MASK_SECT), data_copy_lsn, 1, 1);
+				ASSERT( write_sect_num == UPN_SECT_NUM_PER_PAGE);
+				free_MLC_page_no[1] += UPN_SECT_NUM_PER_PAGE;
+			}		
+			if((Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].map_status == MAP_REAL) 
+				|| (Mix_4K_opagemap[UPN_BLK_PAGE_NO_SECT(data_copy_lsn[0])].map_status == MAP_GHOST)) {
+			  delay_flash_update++;
+			}
+			else {
+			  map_arr[pos] = data_copy_lsn[0];
+			  pos++;
+			} 
+	
+		}//有效数据页拷贝
+	}//end--for
+
+//	翻译页更新，确定哪些映射项同属一个翻译页一起更新
+	for(i=0;i < S_PAGE_NUM_PER_BLK/2;i++) {
+		temp_arr[i]=-1; //之后存的都是需要更新的翻译页（SLC）
+	}
+		
+	k=0;
+	for(i =0 ; i < pos; i++) {
+		old_flag = 0;
+		for( j = 0 ; j < k; j++) {
+			 if(temp_arr[j] == Mix_4K_mapdir[(map_arr[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE].ppn){
+//				必须有对应的翻译页 ,若何之前的翻译项同属一个翻译页则不需要添加新的翻译页	
+				  if(temp_arr[j] == -1){
+						printf("something wrong");
+						ASSERT(0);
+				  }
+				  old_flag = 1;
+				  break;
+			 }
+		}
+		if( old_flag == 0 ) {
+			 temp_arr[k] = Mix_4K_mapdir[((map_arr[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE)].ppn;
+			 temp_arr1[k] = map_arr[i];
+			 k++;
+		}
+		else
+		  save_count++;
+	}
+//	更新SLC中的翻译页
+	for ( i=0; i < k; i++) {
+		if(free_SLC_page_no[0] >= S_SECT_NUM_PER_BLK) {
+			if((free_SLC_blk_no[0] = SLC_nand_get_free_blk(1)) == -1){
+				printf("we are in big trouble shudnt happen \n
+					In SLC data GC update--> SLC map free block is full\n");
+			}
+				  free_SLC_page_no[0] = 0;
+		}
+		
+		SLC_nand_page_read(temp_arr[i]*S_SECT_NUM_PER_PAGE, map_copy, 1);
+		map_lpn = (temp_arr1[i]/UPN_SECT_NUM_PER_PAGE)/MIX_MAP_ENTRIES_PER_PAGE;
+		
+		//invalid old map page
+		for(m = 0; m < S_SECT_NUM_PER_PAGE; m++){
+			SLC_nand_invalidate( Mix_4K_mapdir[map_lpn].ppn*S_SECT_NUM_PER_PAGE+m, map_copy[m]);
+		}
+		nand_stat(SLC_OOB_WRITE);
+		
+		benefit += SLC_gc_get_free_blk(0,mapdir_flag);
+		
+		Mix_4K_mapdir[map_lpn].ppn = S_BLK_PAGE_NO_SECT(S_SECTOR(free_SLC_blk_no[0], free_SLC_page_no[0]));
+//		翻译页更新到SLC
+		SLC_nand_page_write(S_SECTOR(free_SLC_blk_no[0],free_SLC_page_no[0]) & (~S_OFF_MASK_SECT), map_copy, 1, 2);
+		free_SLC_page_no[0] += S_SECT_NUM_PER_PAGE;
+	}
+
+	//	统计合并次数
+	if(merge_count == 0 ) 
+	  SLC_merge_switch_num++;
+	else if(merge_count > 0 && merge_count < S_PAGE_NUM_PER_BLK)
+	  SLC_merge_partial_num++;
+	else if(merge_count == S_PAGE_NUM_PER_BLK)
+	  SLC_merge_full_num++;
+	else if(merge_count > S_PAGE_NUM_PER_BLK){
+	  printf("merge_count =%d PAGE_NUM_PER_BLK=%d",merge_count,S_PAGE_NUM_PER_BLK);
+	  ASSERT(0);
+	}
+	//	将数据块擦除
+	SLC_nand_erase(victim_blk_no);
+	//	此处插入磨损均衡代码
+	
+#ifdef DEBUG
+		for(i = 0; i < nand_SLC_blk_num;i++){
+			if( i == free_SLC_blk_no[1] || i == free_SLC_blk_no[0]){
+				continue;
+			}
+			if(SLC_nand_blk[i].state.free == 0 && SLC_nand_blk[i].fpc !=0){
+				printf("after 4K page write \ndebug warnning SLC nand blk %d no write full\n",i);
+				assert(0);
+			}
+		}
+ #endif
+	
+	return 0;
+
+
+}
+
+
+
+
 
 
 /************************************
