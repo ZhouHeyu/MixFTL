@@ -45,7 +45,16 @@ static int TPB = -1;
 
 void Wear_Monitor();
 static int SFTL_Data_Operation(int blkno,int operation,int hot_flag);
+void SFTL_init();
 static void Update_SLC_ppn_status(int lpn);
+static void Hit_Hot_region(int blkno,int operation);
+static void Hot_Region_Is_Full(int isRun);
+static void Cold_Region_Is_Full(int isRun);
+static Node * Find_ColdList_CleanNode();
+static void Max_Map_Cluster_Write_Back();
+static void Hit_TPB_Region(int blkno,int operation);
+static void Not_Hit_CMT(int blkno,int operation);
+static void Hit_Cold_region(int blkno,int operation);
 /*****************************
  * Name :Wear_Monitor
  * Date: 05.12.2018 
