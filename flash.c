@@ -1784,7 +1784,7 @@ _u32 SLC_nand_get_free_blk (int isGC)
   flag1 = 0;
 
   SLC_MIN_ERASE = 9999999;
-  if ((isGC == 0) && (SLC_min_fb_num >= free_SLC_blk_num)) {
+  if ((isGC == 0) && (SLC_min_fb_num > free_SLC_blk_num)) {
 #ifdef DEBUG 
 		  printf("SLC_min_fb_num: %d\t", SLC_min_fb_num);
 		  printf("free SLC blk num: %d\n", free_SLC_blk_num);

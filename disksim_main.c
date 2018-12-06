@@ -103,7 +103,7 @@ void warmFlash(char *tname){
     for(i = blkno; i<(blkno+bcount); i++){ dm_table[i] = DEV_FLASH; }
   }
   nand_stat_reset();
-
+  Mix_nand_stat_reset();
   if(ftl_type == 3) opagemap_reset(); 
 
   else if(ftl_type == 4) {

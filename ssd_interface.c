@@ -19,6 +19,7 @@
 #include "disksim_global.h"
 #include "MixFTL.h"
 #include "ssd_IRR.h"
+#include "ssd_SFTL.h"
 #include "dftl.h"
 
 extern int merge_switch_num;
@@ -525,7 +526,8 @@ double callFsim(unsigned int secno, int scount, int operation)
   		delay = FAST_Scheme(secno, scount, operation);
   	} else if(ftl_type == 5){
 		//delay = MixFTL_Scheme(secno,scount,operation);
-		delay =IRRFTL_Scheme(secno,scount,operation);
+		//delay =IRRFTL_Scheme(secno,scount,operation);
+		delay = SFTL_Scheme(secno,scount,operation);
 	}
 	
   	return delay;

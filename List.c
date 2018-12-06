@@ -37,18 +37,19 @@ void FreeList(Node * Head)
     free(Head);
 }
 
-Node *SearchLPNInList(int lpn,Node *Head)
+Node * SearchLPNInList(int lpn,Node *Head)
 {
-    Node *temp;
-    temp=Head->next;
-    while(temp !=Head){
-        if(temp->lpn_num==lpn){
-            return temp;
+    Node * res = NULL ;
+    Node * temp = Head->next;
+    while(temp != Head){
+        if(temp->lpn_num == lpn){
+			res = temp ;
+            break;
         }
         temp=temp->next;
     }
 //   没有找到则返回空的Node
-    return NULL;
+    return res;
 }
 
 
@@ -65,7 +66,11 @@ int ListLength(Node *Head)
 {
     int L=0;
     Node *temp=Head->next;
-    while(temp!=Head){
+    if(IsEmptyList(Head) == 1){
+		return L;
+	}
+	
+	while(temp != Head){
         L++;
         temp=temp->next;
     }
@@ -138,8 +143,8 @@ Node *DeleteNodeInList(Node *DNode,Node *Head)
     Node *temp;
     int flag=0;
     temp=Head->pre;
-    while(temp!=Head){
-        if(temp==DNode){
+    while(temp != Head){
+        if(temp == DNode){
             flag=1;
             break;
         }
@@ -251,9 +256,11 @@ Node *MoveNodeToMRU(Node *Insert,Node *Head, int ishot)
 {
     Node *temp;
     Insert->irr_flag = ishot;
-    //    remove
-    Insert->pre->next=Insert->next;
-    Insert->next->pre=Insert->pre;
+    if(Insert->next != NULL && Insert->pre != NULL ){
+		//    remove
+		Insert->pre->next=Insert->next;
+		Insert->next->pre=Insert->pre;
+	}
     
     Insert->pre=Head;
     Insert->next=Head->next;
