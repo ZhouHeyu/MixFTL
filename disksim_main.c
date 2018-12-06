@@ -150,9 +150,12 @@ int main (int argc, char **argv)
 	}
 
   }
-
+  SSD_warm_flag = 1;
  // warmFlashsynth();
   warmFlash(argv[4]);
+  SSD_warm_flag = 0;
+  Mix_nand_stat_reset();
+  nand_stat_reset();
 
   disksim_run_simulation ();
 

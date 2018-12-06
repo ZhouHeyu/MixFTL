@@ -570,10 +570,13 @@ int SLC_gc_get_free_blk(int small, int mapdir_flag)
 {
   if (free_SLC_page_no[small] >= S_SECT_NUM_PER_BLK) {
 #ifdef DEBUG
-	if (SLC_nand_blk[free_SLC_blk_no[small]].fpc > 0){
-		printf("free_SLC_blk_no[%d] :%d\n",small,free_SLC_blk_no[small]);
-		printf("SLC_nand_blk[%d].fpc is %d\n",free_SLC_blk_no[small],SLC_nand_blk[free_SLC_blk_no[small]].fpc);
-		assert(0);
+	//ASSERT(free_SLC_blk_no[small]>=0 && free_SLC_blk_no[small]< nand_SLC_blk_num);
+	if(free_SLC_blk_no[small]>=0 && free_SLC_blk_no[small]< nand_SLC_blk_num){
+		if (SLC_nand_blk[free_SLC_blk_no[small]].fpc > 0){
+			printf("free_SLC_blk_no[%d] :%d\n",small,free_SLC_blk_no[small]);
+			printf("SLC_nand_blk[%d].fpc is %d\n",free_SLC_blk_no[small],SLC_nand_blk[free_SLC_blk_no[small]].fpc);
+			assert(0);
+		}
 	}
 #endif
 	free_SLC_blk_no[small] =  SLC_nand_get_free_blk(1);
@@ -596,10 +599,13 @@ int MLC_gc_get_free_blk(int small, int mapdir_flag)
 {
   if (free_MLC_page_no[small] >= M_SECT_NUM_PER_BLK) {
 #ifdef DEBUG
-	if(MLC_nand_blk[free_MLC_blk_no[small]].fpc >0){
-		printf("free_MLC_blk_no[%d]:%d not write full\n",small,free_MLC_blk_no[small]);
-		printf("MLC nand blk %d fpc is %d\n",free_MLC_blk_no[small],MLC_nand_blk[free_MLC_blk_no[small]].fpc);
-		assert(0);
+	//ASSERT(free_MLC_blk_no[small]>=0 && free_MLC_blk_no[small]< nand_MLC_blk_num);
+	if(free_MLC_blk_no[small]>=0 && free_MLC_blk_no[small]< nand_MLC_blk_num){
+		if(MLC_nand_blk[free_MLC_blk_no[small]].fpc >0){
+			printf("free_MLC_blk_no[%d]:%d not write full\n",small,free_MLC_blk_no[small]);
+			printf("MLC nand blk %d fpc is %d\n",free_MLC_blk_no[small],MLC_nand_blk[free_MLC_blk_no[small]].fpc);
+			assert(0);
+		}
 	}
 #endif
 	free_MLC_blk_no[small] =  MLC_nand_get_free_blk(1);

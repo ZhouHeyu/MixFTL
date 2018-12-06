@@ -7,7 +7,7 @@
 #include "ssd_IRR.h"
 #include "ssd_interface.h"
 
-#define MAP_MAX_ENTRIES 20
+#define MAP_MAX_ENTRIES 4096
 #define SFTL_MAP_HOT  2
 #define SFTL_MAP_COLD 3
 #define SFTL_MAP_TPB 4
@@ -27,13 +27,13 @@ static int Mix_4K_page_num_for_2nd_map_table; //based on 4k map page
 static int Wear_Flag = -1 ; //1 SLC fast ; 2 MLC fast 
 static int Mix_normalization_value = 10; //SLC and MLC ecn all normalized in MLC
 static double Wear_Value;
-static double Wear_Th = 1.2;
+static double Wear_Th = 1.1;
 
 static int Max_Hot_Len;
 static double Max_Hot_rate;
-double change_rate_step = 0.1;
+double change_rate_step = 0.05;
 double Max_Hot_up_rate = 0.8;
-double Max_Hot_down_rate = 0.1;
+double Max_Hot_down_rate = 0.05;
 
 static int Curr_Hot_Len;
 static int Curr_Cold_Len;
@@ -70,6 +70,8 @@ void Wear_Monitor()
 	double MLC_AVE_ECN = MLC_ALL_ECN * 1.0 / nand_MLC_blk_num;
 	double SLC_Normal_ECN = SLC_AVE_ECN / Mix_normalization_value;
 	double MLC_Normal_ECN  = MLC_AVE_ECN;
+	double delete_step = 0.0,add_step = 0.0;
+	
 	if(MLC_Normal_ECN > SLC_Normal_ECN){
 		Wear_Value = MLC_Normal_ECN / SLC_Normal_ECN;
 		Wear_Flag = SPEED_MLC_FAST;
@@ -77,26 +79,41 @@ void Wear_Monitor()
 		Wear_Value = SLC_Normal_ECN / MLC_Normal_ECN;
 		Wear_Flag = SPEED_SLC_FAST;
 	}
-#ifdef DEBUG
-	printf("SLC ALL ECN %d\t SLC AVE ECN %f\t SLC Normalized ECN %f\n",SLC_ALL_ECN ,SLC_AVE_ECN,SLC_Normal_ECN);
-	printf("MLC ALL ECN %d\t MLC AVE ECN %f\t MLC Normalized ECN %f\n",MLC_ALL_ECN ,MLC_AVE_ECN,MLC_Normal_ECN);
-#endif 
+
 	// decide to change Max_Hot_Len
 	if(Wear_Value >= Wear_Th){
 		if(Wear_Flag == SPEED_MLC_FAST){
 			Max_Hot_rate += change_rate_step;
-			Max_Hot_rate = (Max_Hot_rate > Max_Hot_up_rate? Max_Hot_up_rate : Max_Hot_rate);
+			Max_Hot_rate = ((Max_Hot_rate > Max_Hot_up_rate)? Max_Hot_up_rate : Max_Hot_rate);
 			Max_Hot_Len = MAP_MAX_ENTRIES * Max_Hot_rate;
+			add_step = change_rate_step;
 			
 		}else if(Wear_Flag == SPEED_SLC_FAST){
 			Max_Hot_rate -= change_rate_step;
-			Max_Hot_rate = (Max_Hot_rate < Max_Hot_down_rate? Max_Hot_up_rate : Max_Hot_rate);
+			Max_Hot_rate = ((Max_Hot_rate < Max_Hot_down_rate)? Max_Hot_down_rate : Max_Hot_rate);
 			Max_Hot_Len = MAP_MAX_ENTRIES * Max_Hot_rate;
+			delete_step = change_rate_step;
 		}else{
 			printf("Wear_FLag is %d\n",Wear_Flag);
 			assert(0);
 		}
-	}	
+	}
+#ifdef DEBUG
+	if(debug_count % 10000 == 0 && SSD_warm_flag == 0){
+		printf("SLC ALL ECN %d\t SLC AVE ECN %f\t SLC Normalized ECN %f\n",SLC_ALL_ECN ,SLC_AVE_ECN,SLC_Normal_ECN);
+		printf("MLC ALL ECN %d\t MLC AVE ECN %f\t MLC Normalized ECN %f\n",MLC_ALL_ECN ,MLC_AVE_ECN,MLC_Normal_ECN);
+		if(Wear_Flag == SPEED_MLC_FAST){
+			printf("MLC-Wear fast\tWear-Value %f\tWear-Th:%f\n"	,Wear_Value,Wear_Th);
+			printf("Hot-Rate:%f\t add-step:%f\tHot-len:%d\t add-hot-len:%d\n",Max_Hot_rate,add_step,Max_Hot_Len,(int)(add_step*MAP_MAX_ENTRIES));
+		}else{
+			printf("SLC-Wear fast\tWear-Value %f\tWear-Th:%f\n"	,Wear_Value,Wear_Th);
+			printf("Hot-Rate:%f\t delete-step:%f\tHot-len:%d\t delete-hot-len:%d\n",Max_Hot_rate,delete_step,Max_Hot_Len,(int)(delete_step*MAP_MAX_ENTRIES));
+		}
+
+		debug_count = 1;
+	}
+	debug_count++;
+#endif 	
 }
 
 /**************************
@@ -266,7 +283,7 @@ static void Cold_Region_Is_Full(int req_lpn)
 		Max_Map_Cluster_Write_Back();
 		VictimNode = Find_ColdList_CleanNode(req_lpn);
 		if(VictimNode == NULL){
-			printf("can not find clean page in Cold region\n");
+			//printf("can not find clean page in Cold region\n");
 			VictimNode = SFTL_Cold_Head->pre;
 			if(VictimNode->lpn_num == req_lpn){
 				printf("so small arr\n");
@@ -499,6 +516,7 @@ double SFTL_Scheme(unsigned int secno,int scount, int operation)
 	while(cnt > 0){
 		cnt--;
 		operation_time ++;
+		Wear_Monitor();
 		Update_SLC_ppn_status(blkno);
 		if(Mix_4K_opagemap[blkno].map_status == SFTL_MAP_HOT){
 			//hit hot region

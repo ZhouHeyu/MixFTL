@@ -26,7 +26,9 @@
 #define GC_WRITE_DELAY WRITE_DELAY  // gc write_delay = write delay 
 #define OOB_READ_DELAY    0.0
 #define OOB_WRITE_DELAY   0.0
-
+//add zhoujie 12-5
+#define DATA_READ 1
+#define DATA_WRITE 0
 /***Mix SSD Time Delay Value**/
 #define SLC_READ_DELAY        (0.0250)
 #define SLC_WRITE_DELAY       (0.200)
@@ -109,7 +111,7 @@ int flash_gc_write_num;
 int flash_erase_num;
 int flash_oob_read_num;
 int flash_oob_write_num;
-
+int SSD_warm_flag;
 /*******Mix SSD Stat Value*****/
 int SLC_flash_read_num;
 int SLC_flash_write_num;
