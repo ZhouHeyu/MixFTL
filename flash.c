@@ -183,6 +183,10 @@ void nand_stat_reset()
   stat_read_num = stat_write_num = stat_erase_num = 0;
   stat_gc_read_num = stat_gc_write_num = 0;
   stat_oob_read_num = stat_oob_write_num = 0;
+  //add 07.12.2018
+  real_data_write_sect_num = 0;
+  sup_data_write_sect_num = 0;
+  translate_map_write_num = 0;
 }
 
 void nand_stat_print(FILE *outFP)
@@ -198,6 +202,19 @@ void nand_stat_print(FILE *outFP)
   fprintf(outFP, " GC page read (#): %8u   ", stat_gc_read_num);
   fprintf(outFP, " GC page write (#): %8u\n", stat_gc_write_num);
   fprintf(outFP, "Wear Level GC called Num (#): %d\n", called_wear_num);
+  fprintf(outFP, "------------------------------------------------------------\n");
+  fprintf(outFP,"real data write sect num :%8u\t convert to Volume:%f G\n",
+												real_data_write_sect_num,
+												real_data_write_sect_num * 1.0 / (2*1024*1024)
+												);
+  fprintf(outFP,"page align padding write sect num :%8u\t convert to Volume:%f G\n",
+												sup_data_write_sect_num,
+												sup_data_write_sect_num * 1.0 /(2*1024*1024)
+												);
+  fprintf(outFP, "Map(2K page size) write num is %8u\t convert to Volume:%f G\n",
+												translate_map_write_num,
+												translate_map_write_num * 2.0 /(1024 * 1024)
+												);
   fprintf(outFP, "------------------------------------------------------------\n");
 }
 
@@ -952,9 +969,11 @@ int Mix_nand_init (_u32 SLC_blk_num,_u32 MLC_blk_num, _u8 min_free_blk_num)
 void Mix_nand_end ()
 {
   if (SLC_nand_blk != NULL) {
+	free(SLC_nand_blk);
     SLC_nand_blk = NULL;
   }
   if (MLC_nand_blk != NULL) {
+	free(MLC_nand_blk);
     MLC_nand_blk = NULL;
   }
 }
@@ -978,6 +997,10 @@ void Mix_nand_stat_reset()
   MLC_stat_oob_read_num = MLC_stat_oob_write_num = 0;
   //add 12-4
   SLC_to_MLC_num = SLC_to_SLC_num = 0;
+  //add 07.12.2018
+  real_data_write_sect_num = 0;
+  sup_data_write_sect_num = 0;
+  translate_map_write_num = 0;
 }
 
 /*
@@ -1014,6 +1037,22 @@ void Mix_nand_stat_print(FILE *outFP)
 	fprintf(outFP, " SLC_to_SLC_num data page-4k (#): %8u	 ", SLC_to_SLC_num);
 	fprintf(outFP, " SLC_to_MLC_num data page-4k (#): %8u\n", SLC_to_MLC_num);
 	fprintf(outFP, "------------------------------------------------------------\n");
+	
+	fprintf(outFP,"real data write sect num :%8u\t convert to Volume:%f G\n",
+											real_data_write_sect_num,
+											real_data_write_sect_num * 1.0 / (2*1024*1024)
+											);
+	fprintf(outFP,"page align padding write sect num :%8u\t convert to Volume:%f G\n",
+											sup_data_write_sect_num,
+											sup_data_write_sect_num * 1.0 /(2*1024*1024)
+											);
+	fprintf(outFP, "Map(2K page size) write num is %8u\t convert to Volume:%f G\n",
+											translate_map_write_num,
+											translate_map_write_num * 2.0 /(1024 * 1024)
+											);
+	fprintf(outFP, "------------------------------------------------------------\n");
+	
+	
 	
 	fprintf(outFP, "-----------SLC inner Wear level static----------\n");
 	for(i=0; i < nand_SLC_blk_num;i++){
@@ -1335,9 +1374,9 @@ void SLC_nand_erase (_u32 blk_no)
   for(i = 0; i < S_PAGE_NUM_PER_BLK; i++){
     SLC_nand_blk[blk_no].page_status[i] = -1;
   }
-#ifdef DEBUG
-  printf("erase blk:%d\n",blk_no);
-#endif
+//#ifdef DEBUG
+  ////printf("erase blk:%d\n",blk_no);
+//#endif
   free_SLC_blk_num++;
 
   nand_stat(SLC_BLOCK_ERASE);
@@ -1516,6 +1555,9 @@ _u8 SLC_nand_page_write(_u32 psn, _u32 *lsns, _u8 isGC, int map_flag)
   }
   
   ASSERT(SLC_nand_blk[pbn].fpc >= 0);
+  if(map_flag == 2){
+	translate_map_write_num ++;
+  }
 
   if (isGC) {
     nand_stat(SLC_GC_PAGE_WRITE);
@@ -1725,10 +1767,10 @@ _u32 MLC_nand_get_free_blk (int isGC)
   MLC_MIN_ERASE = 9999999;
   //in case that there is no avaible free block -> GC should be called !
   if ((isGC == 0) && ( MLC_min_fb_num >= free_MLC_blk_num)) {
-#ifdef DEBUG 
-    printf("MLC_min_fb_num: %d\t", MLC_min_fb_num);
-    printf("free MLC blk num: %d\n", free_MLC_blk_num);
-#endif
+//#ifdef DEBUG 
+    //printf("MLC_min_fb_num: %d\t", MLC_min_fb_num);
+    //printf("free MLC blk num: %d\n", free_MLC_blk_num);
+//#endif
 	return -1;
   }
 
@@ -1736,7 +1778,6 @@ _u32 MLC_nand_get_free_blk (int isGC)
   {
     if (MLC_nand_blk[i].state.free == 1) {
       flag1 = 1;
-
       if ( MLC_nand_blk[i].state.ec < MLC_MIN_ERASE ) {
             blk_no = i;
             MLC_MIN_ERASE = MLC_nand_blk[i].state.ec;
@@ -1746,8 +1787,7 @@ _u32 MLC_nand_get_free_blk (int isGC)
   }
   if(flag1 != 1){
     printf("no free block left=%d",free_MLC_blk_num);
-    
-  ASSERT(0);
+	ASSERT(0);
   }
   if ( flag == 1) {
         flag = 0;
@@ -1785,10 +1825,10 @@ _u32 SLC_nand_get_free_blk (int isGC)
 
   SLC_MIN_ERASE = 9999999;
   if ((isGC == 0) && (SLC_min_fb_num > free_SLC_blk_num)) {
-#ifdef DEBUG 
-		  printf("SLC_min_fb_num: %d\t", SLC_min_fb_num);
-		  printf("free SLC blk num: %d\n", free_SLC_blk_num);
-#endif
+//#ifdef DEBUG 
+		  //printf("SLC_min_fb_num: %d\t", SLC_min_fb_num);
+		  //printf("free SLC blk num: %d\n", free_SLC_blk_num);
+//#endif
     return -1;
   }
 

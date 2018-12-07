@@ -304,6 +304,13 @@ _u32 MLC_stat_gc_read_num, MLC_stat_gc_write_num;
 _u32 MLC_stat_oob_read_num, MLC_stat_oob_write_num;
 /***********************************/
 
+//add zhoujie 
+/***********************************/
+_u32 translate_map_write_num; 
+_u32 real_data_write_sect_num;
+_u32 sup_data_write_sect_num;
+ /********************************/
+
 
 _u32 min_fb_num;
 _u32 MLC_min_fb_num;
