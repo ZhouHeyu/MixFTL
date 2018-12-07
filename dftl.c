@@ -59,9 +59,6 @@ double total_gc_overhead_time;
 int map_pg_read=0;
 
 // add zhoujie 11-22
-int SLC_to_SLC_num=0;
-int SLC_to_MLC_num=0;
-
 
 
 _u32 SW_Level_Find_GC_blk_no()
