@@ -510,9 +510,16 @@ double SFTL_Scheme(unsigned int secno,int scount, int operation)
     if(init_flag == 0){
 		SFTL_init();
 	}
+
 	blkno = (secno / UPN_SECT_NUM_PER_PAGE) + Mix_4K_page_num_for_2nd_map_table ;
 	bcount = (secno + scount -1)/UPN_SECT_NUM_PER_PAGE - (secno)/UPN_SECT_NUM_PER_PAGE + 1;
 	cnt = bcount;
+	//add 07.12.2018
+	if(operation == DATA_WRITE){
+		real_data_write_sect_num += scount;
+		sup_data_write_sect_num += (bcount * UPN_SECT_NUM_PER_PAGE - scount);
+	}
+	
 	while(cnt > 0){
 		cnt--;
 		operation_time ++;
