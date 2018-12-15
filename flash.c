@@ -1044,7 +1044,7 @@ void Mix_nand_stat_print(FILE *outFP)
 											);
 	fprintf(outFP,"page align padding write sect num :%8u\t convert to Volume:%f G\n",
 											sup_data_write_sect_num,
-											sup_data_write_sect_num * 1.0 /(2*1024*1024)
+											sup_data_write_sect_num * 1.0 / (2*1024*1024)
 											);
 	fprintf(outFP, "Map(2K page size) write num is %8u\t convert to Volume:%f G\n",
 											translate_map_write_num,
